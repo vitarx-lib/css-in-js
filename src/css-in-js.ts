@@ -124,7 +124,7 @@ export class CssInJs {
   private createStyleSheet(): CSSStyleSheet {
     if (isCSSStyleSheetSupported()) {
       const cssSheet = new CSSStyleSheet()
-      document.adoptedStyleSheets = [cssSheet]
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, cssSheet]
       return cssSheet
     }
     const style = document.createElement('style')
