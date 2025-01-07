@@ -1,14 +1,15 @@
+import type { Listener, Reactive, Scope, ValueProxy } from 'vitarx'
 import {
   getCurrentScope,
   getCurrentVNode,
+  isProxy,
   isReactive,
   isRecordObject,
-  type Listener,
+  isValueProxy,
   reactive,
-  type Reactive,
-  Scope,
   watch
 } from 'vitarx'
+
 import { createUUIDGenerator, isCSSStyleSheetSupported, type UUIDGenerator } from './utils.js'
 
 interface CssRule {
@@ -29,13 +30,13 @@ interface DynamicCssRule {
   /**
    * className
    */
-  name: string
+  readonly name: string
   /**
    * 响应式样式对象
    *
-   * 可以通过此对象更新样式。
+   * 更新对象属性值则会自动更新样式，不可以直接对`style`赋值，只能操作其属性。
    */
-  style: Reactive<CssStyle>
+  readonly style: Reactive<CssStyle>
   /**
    * 转换为字符串
    *
@@ -77,9 +78,10 @@ interface DynamicCssRule {
  * ```
  */
 export class CssInJs {
+  // 随机生成id
+  static readonly uuidGenerator: UUIDGenerator = createUUIDGenerator()
   private readonly supportedReplaceRule: boolean
   private readonly styleSheet: CSSStyleSheet
-  private readonly uuidGenerator: UUIDGenerator
   /**
    * 样式映射表
    *
@@ -111,7 +113,6 @@ export class CssInJs {
     if (!Boolean(typeof window !== 'undefined' && window.document)) {
       throw new Error('CssInJs: 暂不支持在非浏览器端运行。')
     }
-    this.uuidGenerator = createUUIDGenerator()
     this.supportedReplaceRule = isCSSStyleSheetSupported()
     this.styleSheet = this.createStyleSheet()
   }
@@ -137,9 +138,26 @@ export class CssInJs {
 
   /**
    * 获取唯一的`className`
+   *
+   * 规则：`this.prefix`+`CssInJs.uuidGenerator()`
+   *
+   * @returns {string} - 返回一个随机且唯一的`className`。
    */
   public get className(): string {
-    return this.prefix + this.uuidGenerator()
+    return this.prefix + CssInJs.uuidGenerator()
+  }
+
+  /**
+   * 创建一个唯一类名，支持自定义前缀
+   *
+   * @param {string} [prefix] - 前缀，传入空字符串代表不使用前缀，传入undefined或不传入使用默认前缀。
+   * @returns {string} - 返回一个随机且唯一的`className`。
+   */
+  public makeClassName(prefix?: string): string {
+    if (prefix === undefined) return this.prefix + CssInJs.uuidGenerator()
+    prefix = prefix.trim()
+    if (prefix === '') return CssInJs.uuidGenerator()
+    return prefix + CssInJs.uuidGenerator()
   }
 
   /**
@@ -150,11 +168,14 @@ export class CssInJs {
    *
    * 在组件作用域中构建的样式，在组件销毁时，会自动删除样式。
    *
-   * @param {CssStyle|Reactive<CssStyle>} style - 样式对象，支持响应式对象
+   * @param {CssStyle|Reactive<CssStyle>|ValueProxy<CssStyle>} style - 支持`Reactive`|`Ref`|`Computed`等响应式对象自动更新样式。
    * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
    * @returns {string} - 如果传入了自定义的选择器，则返回的是自定义选择器的`className`，否则会生成一个随机且唯一的`className`。
    */
-  public define(style: CssStyle | Reactive<CssStyle>, selector: string = ''): string {
+  public define(
+    style: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
+    selector: string = ''
+  ): string {
     if (!isRecordObject(style)) throw new TypeError(`CssInJs:style must be a record object`)
     const cssRule = this.cssMapToCssRule(style, selector)
     // 判断是否存在相同样式，是则更新样式
@@ -170,7 +191,7 @@ export class CssInJs {
     // 插入样式
     this.styleSheet.insertRule(cssRule.style, this.styleSheet.cssRules.length)
     // 响应式样式处理
-    if (isReactive(style)) {
+    if (isProxy(style)) {
       // 监听样式变化
       const listener = watch(style, () => {
         // 替换新的规则
@@ -214,7 +235,7 @@ export class CssInJs {
    *
    * 此方法与define方法类似，但返回的是`DynamicCssRule`对象，可以通过 `style` 修改样式
    *
-   * @param {CssStyle} style - 样式对象，支持响应式对象
+   * @param {CssStyle} style - 样式对象
    * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
    * @returns {DynamicCssRule} - `DynamicCssRule`对象
    */
@@ -241,7 +262,10 @@ export class CssInJs {
    * @param {string} selector - css选择器
    * @private
    */
-  private cssMapToCssRule(cssStyleMap: CssStyle, selector: string): CssRule {
+  private cssMapToCssRule(
+    cssStyleMap: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
+    selector: string
+  ): CssRule {
     const { name, selectorText } = this.parseSelector(selector)
     const style = this.cssMapToRuleStyle(cssStyleMap, selectorText)
     return {
@@ -258,7 +282,12 @@ export class CssInJs {
    * @param {string} selectorText - 选择器文本
    * @private
    */
-  private cssMapToRuleStyle(cssStyleMap: CssStyle, selectorText: string) {
+  private cssMapToRuleStyle(
+    cssStyleMap: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
+    selectorText: string
+  ) {
+    if (isValueProxy(cssStyleMap)) cssStyleMap = cssStyleMap.value
+    if (!isRecordObject(cssStyleMap)) throw new TypeError(`CssInJs:style must be a record object`)
     const rule = Object.entries(cssStyleMap)
       .map(([key, value]) => {
         // 将驼峰命名转换为短横线命名
@@ -409,12 +438,15 @@ export class CssInJs {
  *
  * 在组件作用域中构建的样式，在组件销毁时，会自动删除样式。
  *
- * @param {CssStyle|Reactive<CssStyle>} style - 样式对象，支持响应式对象
+ * @param {CssStyle|Reactive<CssStyle>|ValueProxy<CssStyle>} style - 样式对象，支持`Reactive`|`Ref`|`Computed`等响应式对象自动更新样式。
  * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
  * @returns {string} - 如果传入了自定义的选择器，则返回的是自定义选择器的`className`，否则会生成一个随机且唯一的`className`。
  * @see {@linkcode CssInJs.define}
  */
-export function define(style: CssStyle | Reactive<CssStyle>, selector: string = ''): string {
+export function define(
+  style: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
+  selector: string = ''
+): string {
   return CssInJs.factory().define(style, selector)
 }
 
@@ -423,7 +455,7 @@ export function define(style: CssStyle | Reactive<CssStyle>, selector: string = 
  *
  * 此方法与define方法类似，但返回的是`DynamicCssRule`对象，可以通过 `style` 修改样式
  *
- * @param {CssStyle} style - 样式对象，支持响应式对象
+ * @param {CssStyle} style - 样式对象
  * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
  * @returns {DynamicCssRule} - `DynamicCssRule`对象
  * @see {@linkcode CssInJs.dynamic}
@@ -445,11 +477,12 @@ export function deleteRule(selector: string): void {
 /**
  * ## 创建一个唯一的 `className`
  *
+ * @param {string} [prefix] - 前缀，传入空字符串代表不使用前缀，传入undefined或不传入使用默认前缀。
  * @returns {string} 返回唯一的 `className`
  * @see {@linkcode CssInJs.className}
  */
-export function makeCssClassName(): string {
-  return CssInJs.factory().className
+export function makeCssClassName(prefix?: string): string {
+  return CssInJs.factory().makeClassName(prefix)
 }
 
 /**
