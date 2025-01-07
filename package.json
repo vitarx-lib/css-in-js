@@ -1,7 +1,7 @@
 {
   "name": "@vitarx/css-in-js",
   "private": false,
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "这是一个为Vitarx框架量身打造的CssInJs库，用于在 JS 中创建 CSS",
   "main": "./dist/css-in-js.umd.js",
   "module": "./dist/css-in-js.es.js",
