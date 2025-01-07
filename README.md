@@ -40,7 +40,7 @@ npm install @vitarx/css-in-js
         color: 'red',
       })
       // 通过difine助手函数定义样式，也可以使用CssInJs.define方法
-      const buttonStyle = define(style)
+      const buttonStyle = define(style) // 不光是能接受reactive定义的响应式对象，还支持ref，compute
       const swtichColor = () => {
         // 修改响应式对象样式
         style.color = style.color === 'red' ? 'blue' : 'red'
