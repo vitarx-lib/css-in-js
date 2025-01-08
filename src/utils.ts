@@ -91,12 +91,18 @@ export function isCSSStyleSheetSupported(): boolean {
 export function cssMapToRuleStyle(cssStyleMap: CssStyleMap, selectorText: string) {
   if (isValueProxy(cssStyleMap)) cssStyleMap = cssStyleMap.value
   if (!isRecordObject(cssStyleMap)) throw new TypeError(`CssInJs:style must be a record object`)
+
   const rule = Object.entries(cssStyleMap)
-    .map(([key, value]) => {
-      // 将驼峰命名转换为短横线命名
-      const kebabKey = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-      return `${kebabKey}: ${String(value)};`
-    })
+    .reduce((acc, [key, value]) => {
+      // 过滤掉值为 null 或 undefined 的样式
+      if (value || value === '0' || value === 0) {
+        // 将驼峰命名转换为短横线命名
+        const kebabKey = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+        acc.push(`${kebabKey}: ${String(value)};`)
+      }
+      return acc
+    }, [] as string[])
     .join('')
+
   return `${selectorText}{${rule}}`
 }
