@@ -12,19 +12,17 @@ npm install @vitarx/css-in-js
 1. 初始化单例
     ```ts
     // main.ts
-    import { CssInJs,cssInJs } from '@vitarx/css-in-js'
+    import { CssInJs } from '@vitarx/css-in-js'
     // 通过静态方法初始化单例
     CssInJs.factory('my-css-') // 'my-css-'是className前缀
-    // 助手函数方式
-    cssInJs('my-css-')
     ```
 2. 使用
     ```tsx
     import { define, type CssStyle, dynamic } from '@vitarx/css-in-js'
-    import { reactive } from 'vitarx'
+    import { reactive,onUnmounted } from 'vitarx' 
     
     // 在非组件作用域中定义的样式属于全局样式，它不会被删除，也不会被重复定义。
-    const container = define({
+    const containerStyle = define({
       width: '500px',
       height: '500px',
       backgroundColor: 'red',
@@ -33,25 +31,26 @@ npm install @vitarx/css-in-js
       alignItems: 'center'
     })
    
-    // 在组件中定义动态样式
-    function Dynamic1() {
-      // 响应式对象定义样式
+    // 响应式的样式定义
+    function ReactiveStyle() {
       const style = reactive<CssStyle>({
         color: 'red',
       })
-      // 通过difine助手函数定义样式，也可以使用CssInJs.define方法
-      const buttonStyle = define(style) // 不光是能接受reactive定义的响应式对象，还支持ref，compute
+      // 传入一个reactive定义的响应式对象，
+      // define内部会自动监听响应式对象变化实时更新样式，
+      // 且在组件销毁时它会自动移除
+      const buttonStyle = define(style) // 还支持ref，computed定义的值代理对象。
       const swtichColor = () => {
         // 修改响应式对象样式
         style.color = style.color === 'red' ? 'blue' : 'red'
       }
-      return <div class={container}>
+      return <div class={containerStyle}>
         <button class={buttonStyle} onclick={swtichColor}>切换按钮颜色</button>
       </div>
     }
    
-    // 使用dynamic助手函数可以更便捷的定义动态样式
-    function Dynamic2() {
+    // 动态样式定义，与响应式样式不同之处是它不会自动删除
+    function DynamicStyle() {
       // 动态样式
       const buttonStyle = dynamic({
         color: 'blue',
@@ -60,7 +59,11 @@ npm install @vitarx/css-in-js
         // 修改动态样式
         dynamicStyle.style.color = dynamicStyle.style.color === 'red' ? 'blue' : 'red'
       }
-      return <div class={container}>
+      onUnmounted(() => {
+        // 在组件卸载时，移除动态样式
+        buttonStyle.remove()
+      })
+      return <div class={containerStyle}>
         {/*注意了，这里需要使用.name来获取className*/}
         <button class={buttonStyle.name} onclick={swtichColor}>切换按钮颜色</button>
       </div>
