@@ -1,14 +1,20 @@
-import type { Reactive, ValueProxy } from 'vitarx'
 import {
   deepMergeObject,
   getCurrentVNode,
   isProxy,
   isReactive,
   isRecordObject,
+  type Reactive,
   reactive,
+  type ValueProxy,
   watch
 } from 'vitarx'
-import { createUUIDGenerator, cssMapToRuleStyle, isCSSStyleSheetSupported } from './utils.js'
+import {
+  createUUIDGenerator,
+  cssMapToRuleStyle,
+  isCSSStyleSheetSupported,
+  removeUndefinedProperties
+} from './utils.js'
 
 export interface CssRule {
   name: string
@@ -206,7 +212,7 @@ export class CssInJs {
     if (!Boolean(typeof window !== 'undefined' && window.document)) {
       throw new Error('CssInJs: 暂不支持在非浏览器端运行。')
     }
-    if (options) deepMergeObject(this.options, options)
+    if (options) deepMergeObject(this.options, removeUndefinedProperties(options))
     this.sheet = {
       dynamic: this.createStyleSheet(),
       static: this.createStyleSheet()
