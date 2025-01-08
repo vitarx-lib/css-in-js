@@ -1,36 +1,33 @@
-import type { Listener, Reactive, Scope, ValueProxy } from 'vitarx'
+import type { Reactive, ValueProxy } from 'vitarx'
 import {
-  getCurrentScope,
+  deepMergeObject,
   getCurrentVNode,
   isProxy,
   isReactive,
   isRecordObject,
-  isValueProxy,
   reactive,
   watch
 } from 'vitarx'
+import { createUUIDGenerator, cssMapToRuleStyle, isCSSStyleSheetSupported } from './utils.js'
 
-import { createUUIDGenerator, isCSSStyleSheetSupported, type UUIDGenerator } from './utils.js'
-
-interface CssRule {
+export interface CssRule {
   name: string
-  style: string
+  rule: string
   selectorText: string
 }
-
 /**
  * css属性映射
  */
 export type CssStyle = Vitarx.CssStyle
-
 /**
  * 动态样式
  */
-interface DynamicCssRule {
+export interface DynamicCssRule {
   /**
    * className
    */
   readonly name: string
+  readonly selectorText: string
   /**
    * 响应式样式对象
    *
@@ -43,6 +40,101 @@ interface DynamicCssRule {
    * @returns {string} 返回`name`
    */
   toString(): string
+  /**
+   * 删除样式
+   */
+  remove(): void
+}
+/**
+ * 屏幕尺寸规则
+ */
+export interface MediaScreenRule {
+  /**
+   * 手机
+   *
+   * @default `@media screen (max-width: 575px)`
+   */
+  xs: string
+  /**
+   * 小平板
+   *
+   * @default `@media screen (min-width: 576px) and (max-width: 767px)`
+   */
+  sm: string
+  /**
+   * 普通平板
+   *
+   * @default `@media screen (min-width: 768px) and (max-width: 991px)`
+   */
+  md: string
+  /**
+   * 大屏平板
+   *
+   * @default `@media screen (min-width: 992px) and (max-width: 1199px)`
+   */
+  lg: string
+  /**
+   * 笔记本电脑
+   *
+   * @default `@media screen (min-width: 1200px)`
+   */
+  xl: string
+  /**
+   * 台式电脑显示器
+   *
+   * @default `@media screen (min-width: 1600px)`
+   */
+  xxl: string
+}
+
+/** 屏幕尺寸 */
+export type Screen = keyof MediaScreenRule
+
+/**
+ * 可选配置项
+ */
+export interface CssInJsOptions {
+  /**
+   * 前缀，建议设置前缀，避免冲突。
+   *
+   * @default ''
+   */
+  prefix?: string
+  /**
+   * 屏幕尺寸媒介查询预设规则
+   *
+   * @default {
+   *   xs: "@media screen (max-width: 575px)",
+   *   sm: "@media screen (min-width: 576px) and (max-width: 767px)",
+   *   md: "@media screen (min-width: 768px) and (max-width: 991px)",
+   *   lg: "@media screen (min-width: 992px) and (max-width: 1199px)",
+   *   xl: "@media screen (min-width: 1200px)",
+   *   xxl: "@media screen (min-width: 1600px)"
+   * }
+   */
+  mediaScreenRule?: Partial<MediaScreenRule>
+}
+
+export type CssStyleMap = CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>
+
+export interface CssRuleOptions {
+  /**
+   * 自定义选择器
+   *
+   * 示例：`.my-class:hover`，`.my-class[attr=value]`...
+   */
+  selector?: string
+  /**
+   * 适配屏幕尺寸
+   */
+  screen?: Screen
+}
+
+export type SheetStore = {
+  dynamic: CSSStyleSheet
+  static: CSSStyleSheet
+} & {
+  [k in Screen]?: CSSStyleSheet
 }
 
 /**
@@ -52,7 +144,7 @@ interface DynamicCssRule {
  *
  * @example
  * ```tsx
- * import { CssInJs,type CssStyle } from '@vitarx/css-in-js'
+ * import CssInJs from '@vitarx/css-in-js'
  *
  * // 实例化 cssInJs
  * const cssInJs = new CssInJs('my-')
@@ -68,7 +160,7 @@ interface DynamicCssRule {
  * // 响应式样式
  * const Button:Vitarx.FN = () => {
  *   // 组件销毁时会自动移除该样式
- *   const buttonCssRule = cssInJs.dynamic({color: 'red'})
+ *   const buttonCssRule = cssInJs.reactive({color: 'red'})
  *   const switchColor = () => {
  *    // 动态更改样式
  *    buttonCssRule.style.color = buttonCssRule.style.color === 'red' ? 'blue' : 'red'
@@ -78,64 +170,48 @@ interface DynamicCssRule {
  * ```
  */
 export class CssInJs {
+  static readonly isSupportedReplaceRule: boolean = isCSSStyleSheetSupported()
   // 随机生成id
-  static readonly uuidGenerator: UUIDGenerator = createUUIDGenerator()
-  private readonly supportedReplaceRule: boolean
-  private readonly styleSheet: CSSStyleSheet
+  static readonly uuidGenerator: () => string = createUUIDGenerator()
   /**
-   * 样式映射表
-   *
-   * 键为选择器，值为完整的规则样式字符串
+   * 单实例
    *
    * @private
    */
-  private readonly styleMaps = new Map<string, string>()
-  /**
-   * 监听器映射表
-   *
-   * 键为完整选择器，值为监听器
-   *
-   * @private
-   */
-  private readonly watchMaps = new Map<string, Listener>()
-  /**
-   * 作用域映射表
-   *
-   * @private
-   */
-  private readonly scopeMaps = new WeakMap<Scope, Set<string>>()
+  private static instance: CssInJs | null = null
+  // 样式表
+  private readonly sheet: SheetStore
+  // 配置项
+  private readonly options: DeepRequired<CssInJsOptions> = {
+    prefix: '',
+    mediaScreenRule: {
+      xs: `@media screen (max-width: 575px)`,
+      sm: `@media screen (min-width: 576px) and (max-width: 767px)`,
+      md: `@media screen (min-width: 768px) and (max-width: 991px)`,
+      lg: `@media screen (min-width: 992px) and (max-width: 1199px)`,
+      xl: `@media screen (min-width: 1200px)`,
+      xxl: `@media screen (min-width: 1600px)`
+    }
+  }
   /**
    * 创建一个CssInJs实例
    *
-   * @param {string} [prefix] - 前缀，建议添加前缀，避免冲突。
+   * @param {CssInJsOptions} [options] - 可选配置项
    */
-  constructor(private readonly prefix: string = '') {
+  constructor(options?: CssInJsOptions) {
     if (!Boolean(typeof window !== 'undefined' && window.document)) {
       throw new Error('CssInJs: 暂不支持在非浏览器端运行。')
     }
-    this.supportedReplaceRule = isCSSStyleSheetSupported()
-    this.styleSheet = this.createStyleSheet()
-  }
-
-  /**
-   * 初始化
-   *
-   * @private
-   */
-  private createStyleSheet(): CSSStyleSheet {
-    if (isCSSStyleSheetSupported()) {
-      const cssSheet = new CSSStyleSheet()
-      document.adoptedStyleSheets = [...document.adoptedStyleSheets, cssSheet]
-      return cssSheet
+    if (options) deepMergeObject(this.options, options)
+    this.sheet = {
+      dynamic: this.createStyleSheet(),
+      static: this.createStyleSheet()
     }
-    const style = document.createElement('style')
-    style.appendChild(
-      document.createComment('此样式表由@vitarx/css-in-js注入与管理，请勿外部变更。')
-    )
-    document.head.append(style)
-    return style.sheet!
   }
-
+  // 前缀
+  public get prefix(): string {
+    return this.options.prefix
+  }
   /**
    * 获取唯一的`className`
    *
@@ -143,118 +219,181 @@ export class CssInJs {
    *
    * @returns {string} - 返回一个随机且唯一的`className`。
    */
-  public get className(): string {
-    return this.prefix + CssInJs.uuidGenerator()
+  private get className(): string {
+    return CssInJs.makeClassName(this.prefix)
   }
-
   /**
    * 创建一个唯一类名，支持自定义前缀
    *
-   * @param {string} [prefix] - 前缀，传入空字符串代表不使用前缀，传入undefined或不传入使用默认前缀。
+   * @param {string} [prefix] - 前缀。
    * @returns {string} - 返回一个随机且唯一的`className`。
    */
-  public makeClassName(prefix?: string): string {
-    if (prefix === undefined) return this.prefix + CssInJs.uuidGenerator()
-    prefix = prefix.trim()
-    if (prefix === '') return CssInJs.uuidGenerator()
+  public static makeClassName(prefix: string = ''): string {
     return prefix + CssInJs.uuidGenerator()
   }
-
   /**
-   * ## 定义样式
+   * 单例模式工厂方法
    *
-   * @remarks
-   * 注意：仅支持`class`选择器，可以附带伪类选择器(`.className:hover`)、属性选择器(`.className[attr=value]`)。
-   *
-   * 在组件作用域中构建的样式，在组件销毁时，会自动删除样式。
-   *
-   * @param {CssStyle|Reactive<CssStyle>|ValueProxy<CssStyle>} style - 支持`Reactive`|`Ref`|`Computed`等响应式对象自动更新样式。
-   * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
-   * @returns {string} - 如果传入了自定义的选择器，则返回的是自定义选择器的`className`，否则会生成一个随机且唯一的`className`。
+   * @param {CssInJsOptions} [options] - 可选配置项，仅在第一次调用此方法时有效。
+   * @returns {CssInJs} 返回CssInJs实例
    */
-  public define(
-    style: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
-    selector: string = ''
-  ): string {
-    if (!isRecordObject(style)) throw new TypeError(`CssInJs:style must be a record object`)
+  static factory(options?: CssInJsOptions): CssInJs {
+    // 如果实例不存在，则创建一个新的实例并返回
+    if (!this.instance) this.instance = new CssInJs(options)
+    // 返回单例实例
+    return this.instance
+  }
+  /**
+   * 定义样式
+   *
+   * 如果是在组件创建作用域中定义的样式，会随组件销毁自动删除。
+   *
+   * @param {CssStyleMap} style - 样式对象，支持传入响应式对象，包括但不限于 `Reactive`、`Ref`、`Computed`。
+   * @param {CssRuleOptions} [options] - 可选配置项
+   * @returns {string} - 返回一个`className`。
+   */
+  public define(style: CssStyleMap, options: CssRuleOptions = {}): string {
+    const { selector = '', screen } = options
     const cssRule = this.cssMapToCssRule(style, selector)
-    // 判断是否存在相同样式，是则更新样式
-    const oldRule = this.styleMaps.get(cssRule.selectorText)
-    // 如果存在旧的规则，则更新样式
-    if (oldRule) {
-      // 规则不相同则更新样式
-      if (oldRule !== cssRule.style) {
-        this.replaceCssRule(cssRule.style, cssRule.selectorText)
-      }
-      return cssRule.name
-    }
-    // 插入样式
-    this.styleSheet.insertRule(cssRule.style, this.styleSheet.cssRules.length)
-    // 响应式样式处理
+    const widget = getCurrentVNode()?.instance
+    const sheet = screen
+      ? this.getScreenSheet(screen)
+      : widget
+        ? this.sheet.dynamic
+        : this.sheet.static
+    // 插入规则
+    sheet.insertRule(cssRule.rule, sheet.cssRules.length)
+    // 监听样式变化
     if (isProxy(style)) {
-      // 监听样式变化
-      const listener = watch(style, () => {
-        // 替换新的规则
-        this.replaceCssRule(
-          this.cssMapToRuleStyle(style, cssRule.selectorText),
-          cssRule.selectorText
-        )
-      })
-      // 添加到监听列表
-      this.watchMaps.set(cssRule.selectorText, listener)
-    }
-    // 获取作用域
-    const scope = getCurrentScope()
-    const vnode = getCurrentVNode()
-    // 如果存在于作用域上下文中，则在作用域销毁时，删除作用域下所有样式
-    if (scope && vnode && vnode.instance) {
-      // 添加到作用域映射表
-      if (!this.scopeMaps.has(scope)) {
-        const set = new Set<string>()
-        this.scopeMaps.set(scope, set)
-        scope.onDestroyed(() => {
-          if (vnode.instance!['renderer'].state === 'uninstalling') {
-            set.forEach((selector) => {
-              this.deleteRule(selector)
-            })
-            set.clear()
-            this.scopeMaps.delete(scope)
+      // 监听样式变化，并替换样式
+      const listener = watch(style, () =>
+        this.replaceCssRule(sheet, cssRule.rule, cssRule.selectorText)
+      )
+      if (widget) {
+        const onUnmounted = widget['onUnmounted']
+        widget['onUnmounted'] = () => {
+          if (onUnmounted && typeof onUnmounted === 'function') {
+            onUnmounted.apply(widget)
           }
-        })
+          listener.destroy()
+          // 销毁时删除样式
+          this.deleteRule(sheet, cssRule.selectorText)
+          widget['onUnmounted'] = onUnmounted
+        }
       }
-      this.scopeMaps.get(scope)!.add(cssRule.selectorText)
     }
-    // 存储样式
-    this.styleMaps.set(cssRule.selectorText, cssRule.style)
-    // 返回className
     return cssRule.name
   }
-
   /**
-   * ## 定义响应式动态样式
+   * 定义响应式样式
    *
-   * 此方法与define方法类似，但返回的是`DynamicCssRule`对象，可以通过 `style` 修改样式
+   * 此方法返回一个`ReactiveCssRule`对象，可以通过`ReactiveCssRule.style`更新样式。
    *
-   * @param {CssStyle} style - 样式对象
-   * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
-   * @returns {DynamicCssRule} - `DynamicCssRule`对象
+   * @remarks
+   * 注意：不管在任何地方定义，它都不会自动销毁，不再使用该样式时需调用`ReactiveCssRule.remove()`删除，
+   * 否则内存空间得不到释放！
+   *
+   * @param {CssStyle} style - 样式对象，只能传入普通的键值对对象或者`Reactive`对象，普通的键值对对象会自动转换为`Reactive`。
+   * @param {CssRuleOptions} [options] - 可选配置项
+   * @returns {DynamicCssRule} - 返回一个动态样式对象。
    */
-  public dynamic(style: CssStyle, selector: string = ''): DynamicCssRule {
+  public dynamic(style: CssStyle, options: CssRuleOptions = {}): DynamicCssRule {
+    const { selector = '', screen } = options
     if (!isRecordObject(style)) throw new TypeError(`CssInJs:style must be a record object`)
     if (!isReactive(style)) style = reactive(style)
-    const name = this.define(style, selector)
-    const dynamic: DynamicCssRule = {
-      name,
-      style: style as Reactive<CssStyle>
-    }
-    Object.defineProperty(dynamic, 'toString', {
-      value(): string {
-        return this.name
+    // 创建动态样式
+    const cssRule = this.cssMapToCssRule(style, selector)
+    // 获取样式表
+    const sheet = screen ? this.getScreenSheet(screen) : this.sheet.dynamic
+    // 插入规则
+    sheet.insertRule(cssRule.rule, sheet.cssRules.length)
+    // 监听样式变化，并替换样式
+    const listener = watch(style, () =>
+      this.replaceCssRule(sheet, cssRule.rule, cssRule.selectorText)
+    )
+    return {
+      name: cssRule.name,
+      selectorText: cssRule.selectorText,
+      style: style as Reactive<CssStyle>,
+      toString: () => {
+        return cssRule.name
+      },
+      remove: () => {
+        listener.destroy()
+        this.deleteRule(sheet, cssRule.selectorText)
       }
-    })
-    return dynamic
+    }
   }
-
+  /**
+   * 替换规则
+   *
+   * @param {CSSStyleSheet} sheet - 样式表。
+   * @param {string} rule - 规则文本
+   * @param {string} selectorText - 选择器文本。
+   * @private
+   */
+  private replaceCssRule(sheet: CSSStyleSheet, rule: string, selectorText: string) {
+    if (CssInJs.isSupportedReplaceRule) {
+      sheet.replaceSync(rule)
+    } else {
+      // 删除规则
+      this.deleteRule(sheet, selectorText)
+      // 插入新的规则
+      sheet.insertRule(rule, sheet.cssRules.length)
+    }
+  }
+  /**
+   * 删除规则
+   *
+   * @param sheet
+   * @param selectorText
+   * @private
+   */
+  private deleteRule(sheet: CSSStyleSheet, selectorText: string): void {
+    selectorText = selectorText.trim()
+    if (!selectorText.startsWith('.')) selectorText = `.${selectorText}`
+    for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+      const rule = sheet.cssRules[i]
+      // 检查是否是样式规则 (CSSStyleRule)
+      if (rule instanceof CSSStyleRule && rule.selectorText === selectorText) {
+        sheet.deleteRule(i)
+        return
+      }
+    }
+  }
+  /**
+   * 获取屏幕样式表
+   *
+   * @param screen
+   * @private
+   */
+  private getScreenSheet(screen: Screen): CSSStyleSheet {
+    if (this.sheet[screen]) return this.sheet[screen]
+    const i = this.sheet.static.cssRules.length
+    this.sheet.static.insertRule(`${this.options.mediaScreenRule[screen]}{}`, i)
+    return (this.sheet[screen] = this.sheet.static.cssRules[i] as unknown as CSSStyleSheet)
+  }
+  /**
+   * 创建一个样式表
+   *
+   * @returns {CSSStyleSheet} - CSSStyleSheet。
+   * @private
+   */
+  private createStyleSheet(): CSSStyleSheet {
+    let cssSheet: CSSStyleSheet
+    if (isCSSStyleSheetSupported()) {
+      cssSheet = new CSSStyleSheet()
+      document.adoptedStyleSheets.push(cssSheet)
+    } else {
+      const style = document.createElement('style')
+      style.appendChild(
+        document.createComment('此样式表由@vitarx/css-in-js注入与管理，请勿外部变更。')
+      )
+      document.head.append(style)
+      cssSheet = style.sheet!
+    }
+    return cssSheet
+  }
   /**
    * 样式转字符串
    *
@@ -262,82 +401,11 @@ export class CssInJs {
    * @param {string} selector - css选择器
    * @private
    */
-  private cssMapToCssRule(
-    cssStyleMap: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
-    selector: string
-  ): CssRule {
+  private cssMapToCssRule(cssStyleMap: CssStyleMap, selector: string): CssRule {
     const { name, selectorText } = this.parseSelector(selector)
-    const style = this.cssMapToRuleStyle(cssStyleMap, selectorText)
-    return {
-      name,
-      style,
-      selectorText
-    }
+    const rule = cssMapToRuleStyle(cssStyleMap, selectorText)
+    return { name, rule, selectorText }
   }
-
-  /**
-   * 样式转字符串
-   *
-   * @param {CssStyle} cssStyleMap - 样式对象
-   * @param {string} selectorText - 选择器文本
-   * @private
-   */
-  private cssMapToRuleStyle(
-    cssStyleMap: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
-    selectorText: string
-  ) {
-    if (isValueProxy(cssStyleMap)) cssStyleMap = cssStyleMap.value
-    if (!isRecordObject(cssStyleMap)) throw new TypeError(`CssInJs:style must be a record object`)
-    const rule = Object.entries(cssStyleMap)
-      .map(([key, value]) => {
-        // 将驼峰命名转换为短横线命名
-        const kebabKey = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-        return `${kebabKey}: ${String(value)};`
-      })
-      .join('')
-    return `${selectorText}{${rule}}`
-  }
-
-  /**
-   * 替换规则
-   *
-   * @param {string} style - 完整的样式字符串，包含选择器
-   * @param {string} selectorText - 选择器文本，在不支持`replaceSync`的浏览器中，会先删除旧的规则，再插入新的规则。
-   * @private
-   */
-  private replaceCssRule(style: string, selectorText: string) {
-    // 替换样式映射表
-    this.styleMaps.set(selectorText, style)
-    if (this.supportedReplaceRule) {
-      this.styleSheet.replaceSync(style)
-    } else {
-      // 删除规则
-      this.deleteRule(selectorText)
-      // 插入新的规则
-      this.styleSheet.insertRule(style, this.styleSheet.cssRules.length)
-    }
-  }
-
-  /**
-   * 获取样式表长度
-   *
-   * @returns {number} - 样式表长度
-   */
-  public get length(): number {
-    return this.styleSheet.cssRules.length
-  }
-
-  /**
-   * 获取样式表
-   *
-   * 不要直接操作 `CSSStyleSheet` 对象，可能会导致样式异常。
-   *
-   * @returns {CSSStyleSheet} - 样式表
-   */
-  public get sheet(): CSSStyleSheet {
-    return this.styleSheet
-  }
-
   /**
    * 解析选择器
    *
@@ -345,7 +413,7 @@ export class CssInJs {
    * @returns {{name: string, selectorText: string}} 返回一个对象，包含name和selectorText
    * @private
    */
-  private parseSelector(selector: string): Omit<CssRule, 'style'> {
+  private parseSelector(selector: string): Omit<CssRule, 'rule'> {
     // 去除前后空格
     selector = selector.trim()
 
@@ -376,122 +444,4 @@ export class CssInJs {
       selectorText: selector
     }
   }
-
-  /**
-   * 删除规则
-   *
-   * 通常无需调用此方法删除规则，在组件创建过程中定义的样式会在组件销毁时自动删除。
-   *
-   * @remarks
-   * 注意：`selector`参数必须是完整的选择器，包含伪类和属性选择部分！
-   *
-   * @param {string} selector - 完整的选择器，包含伪类和属性选择部分！
-   */
-  public deleteRule(selector: string): void {
-    selector = selector.trim()
-    if (!selector.startsWith('.')) selector = `.${selector}`
-    // 没有映射规则，停止执行
-    if (!this.styleMaps.has(selector)) return
-    // 从样式映射表中删除
-    this.styleMaps.delete(selector)
-    // 判断是否存在监听器，存在则删除
-    if (this.watchMaps.has(selector)) {
-      this.watchMaps.get(selector)!.destroy()
-      this.watchMaps.delete(selector)
-    }
-    for (let i = this.styleSheet.cssRules.length - 1; i >= 0; i--) {
-      const rule = this.styleSheet.cssRules[i]
-      // 检查是否是样式规则 (CSSStyleRule)
-      if (rule instanceof CSSStyleRule && rule.selectorText === selector) {
-        this.styleSheet.deleteRule(i)
-        return
-      }
-    }
-  }
-
-  /**
-   * 单实例
-   *
-   * @private
-   */
-  private static instance: CssInJs | null = null
-
-  /**
-   * 单例模式工厂方法
-   *
-   * @param {string} [prefix] - 前缀，仅在第一次调用此方法时有效。
-   * @returns {CssInJs} 返回CssInJs实例
-   */
-  static factory(prefix: string = ''): CssInJs {
-    // 如果实例不存在，则创建一个新的实例并返回
-    if (!this.instance) this.instance = new CssInJs(prefix)
-    // 返回单例实例
-    return this.instance
-  }
-}
-
-/**
- * ## 定义样式
- *
- * @remarks
- * 注意：仅支持`class`选择器，可以附带伪类选择器(`.className:hover`)、属性选择器(`.className[attr=value]`)。
- *
- * 在组件作用域中构建的样式，在组件销毁时，会自动删除样式。
- *
- * @param {CssStyle|Reactive<CssStyle>|ValueProxy<CssStyle>} style - 样式对象，支持`Reactive`|`Ref`|`Computed`等响应式对象自动更新样式。
- * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
- * @returns {string} - 如果传入了自定义的选择器，则返回的是自定义选择器的`className`，否则会生成一个随机且唯一的`className`。
- * @see {@linkcode CssInJs.define}
- */
-export function define(
-  style: CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>,
-  selector: string = ''
-): string {
-  return CssInJs.factory().define(style, selector)
-}
-
-/**
- * ## 定义响应式动态样式
- *
- * 此方法与define方法类似，但返回的是`DynamicCssRule`对象，可以通过 `style` 修改样式
- *
- * @param {CssStyle} style - 样式对象
- * @param {string} [selector] - 自定义css选择器，通常用于支持伪类选择器
- * @returns {DynamicCssRule} - `DynamicCssRule`对象
- * @see {@linkcode CssInJs.dynamic}
- */
-export function dynamic(style: CssStyle, selector: string = ''): DynamicCssRule {
-  return CssInJs.factory().dynamic(style, selector)
-}
-
-/**
- * ## 删除样式
- *
- * @param {string} selector - 完整的选择器，包含伪类和属性选择部分！
- * @see {@linkcode CssInJs.deleteRule}
- */
-export function deleteRule(selector: string): void {
-  CssInJs.factory().deleteRule(selector)
-}
-
-/**
- * ## 创建一个唯一的 `className`
- *
- * @param {string} [prefix] - 前缀，传入空字符串代表不使用前缀，传入undefined或不传入使用默认前缀。
- * @returns {string} 返回唯一的 `className`
- * @see {@linkcode CssInJs.className}
- */
-export function makeCssClassName(prefix?: string): string {
-  return CssInJs.factory().makeClassName(prefix)
-}
-
-/**
- * 获取 `CssInJs` 单例
- *
- * @param {string} [prefix] - 前缀，仅在第一次调用时有效。
- * @returns {CssInJs} 返回 `CssInJs` 实例
- * @see {@linkcode CssInJs.factory}
- */
-export function cssInJs(prefix: string = ''): CssInJs {
-  return CssInJs.factory(prefix)
 }
