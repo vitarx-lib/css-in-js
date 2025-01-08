@@ -46,43 +46,43 @@ export interface DynamicCssRule {
   remove(): void
 }
 /**
- * 屏幕尺寸规则
+ * 屏幕尺寸断点规则
  */
 export interface MediaScreenRule {
   /**
    * 手机
    *
-   * @default `@media screen (max-width: 575px)`
+   * @default `@media screen and (max-width: 575px)`
    */
   xs: string
   /**
    * 小平板
    *
-   * @default `@media screen (min-width: 576px) and (max-width: 767px)`
+   * @default `@media screen and (min-width: 576px) and (max-width: 767px)`
    */
   sm: string
   /**
    * 普通平板
    *
-   * @default `@media screen (min-width: 768px) and (max-width: 991px)`
+   * @default `@media screen and (min-width: 768px) and (max-width: 991px)`
    */
   md: string
   /**
    * 大屏平板
    *
-   * @default `@media screen (min-width: 992px) and (max-width: 1199px)`
+   * @default `@media screen and (min-width: 992px) and (max-width: 1199px)`
    */
   lg: string
   /**
-   * 笔记本电脑
+   * 小型显示器
    *
-   * @default `@media screen (min-width: 1200px)`
+   * @default `@media screen and (min-width: 1200px) and (max-width: 1399px)`
    */
   xl: string
   /**
-   * 台式电脑显示器
+   * 大型显示器
    *
-   * @default `@media screen (min-width: 1600px)`
+   * @default `@media screen and (min-width: 1400px)`
    */
   xxl: string
 }
@@ -101,15 +101,15 @@ export interface CssInJsOptions {
    */
   prefix?: string
   /**
-   * 屏幕尺寸媒介查询预设规则
+   * 屏幕尺寸断点预设规则
    *
    * @default {
-   *   xs: "@media screen (max-width: 575px)",
-   *   sm: "@media screen (min-width: 576px) and (max-width: 767px)",
-   *   md: "@media screen (min-width: 768px) and (max-width: 991px)",
-   *   lg: "@media screen (min-width: 992px) and (max-width: 1199px)",
-   *   xl: "@media screen (min-width: 1200px)",
-   *   xxl: "@media screen (min-width: 1600px)"
+   *   xs: "@media screen and (max-width: 575px)",
+   *   sm: "@media screen and (min-width: 576px) and (max-width: 767px)",
+   *   md: "@media screen and (min-width: 768px) and (max-width: 991px)",
+   *   lg: "@media screen and (min-width: 992px) and (max-width: 1199px)",
+   *   xl: "@media screen and (min-width: 1200px) and (max-width: 1399px)",
+   *   xxl: "@media screen and (min-width: 1400px)"
    * }
    */
   mediaScreenRule?: Partial<MediaScreenRule>
@@ -126,6 +126,10 @@ export interface CssRuleOptions {
   selector?: string
   /**
    * 适配屏幕尺寸
+   *
+   * 样式会写入对应的媒介查询中
+   *
+   * @default undefined
    */
   screen?: Screen
 }
@@ -185,12 +189,12 @@ export class CssInJs {
   private readonly options: DeepRequired<CssInJsOptions> = {
     prefix: '',
     mediaScreenRule: {
-      xs: `@media screen (max-width: 575px)`,
-      sm: `@media screen (min-width: 576px) and (max-width: 767px)`,
-      md: `@media screen (min-width: 768px) and (max-width: 991px)`,
-      lg: `@media screen (min-width: 992px) and (max-width: 1199px)`,
-      xl: `@media screen (min-width: 1200px)`,
-      xxl: `@media screen (min-width: 1600px)`
+      xs: `@media screen and (max-width: 575px)`,
+      sm: `@media screen and (min-width: 576px) and (max-width: 767px)`,
+      md: `@media screen and (min-width: 768px) and (max-width: 991px)`,
+      lg: `@media screen and (min-width: 992px) and (max-width: 1199px)`,
+      xl: `@media screen and (min-width: 1200px) and (max-width: 1399px)`,
+      xxl: `@media screen and (min-width: 1400px)`
     }
   }
   /**

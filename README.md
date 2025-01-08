@@ -14,7 +14,7 @@ npm install @vitarx/css-in-js
     // main.ts
     import { CssInJs } from '@vitarx/css-in-js'
     // 通过静态方法初始化单例
-    CssInJs.factory('my-css-') // 'my-css-'是className前缀
+    CssInJs.factory({prefix:'my-css-'}) // 'my-css-'是className前缀
     ```
 2. 使用
     ```tsx
@@ -69,3 +69,48 @@ npm install @vitarx/css-in-js
       </div>
     }
     ```
+   
+## 实例可选配置
+```ts
+interface CssInJsOptions {
+   /**
+    * 前缀，建议设置前缀，避免冲突。
+    *
+    * @default ''
+    */
+   prefix?: string
+   /**
+    * 屏幕尺寸断点预设规则
+    *
+    * @default {
+    *   xs: "@media screen and (max-width: 575px)",
+    *   sm: "@media screen and (min-width: 576px) and (max-width: 767px)",
+    *   md: "@media screen and (min-width: 768px) and (max-width: 991px)",
+    *   lg: "@media screen and (min-width: 992px) and (max-width: 1199px)",
+    *   xl: "@media screen and (min-width: 1200px) and (max-width: 1399px)",
+    *   xxl: "@media screen and (min-width: 1400px)"
+    * }
+    */
+   mediaScreenRule?: Partial<MediaScreenRule>
+}
+```
+
+## 样式可选配置
+```ts
+interface CssRuleOptions {
+   /**
+    * 自定义选择器
+    *
+    * 示例：`.my-class:hover`，`.my-class[attr=value]`...
+    */
+   selector?: string
+   /**
+    * 适配屏幕尺寸
+    * 
+    * 样式会写入对应的媒介查询中
+    * 
+    * @default undefined
+    */
+   screen?: keyof MediaScreenRule
+}
+```
