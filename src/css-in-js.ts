@@ -122,6 +122,8 @@ export interface CssRuleOptions {
   /**
    * 自定义选择器
    *
+   * 原理上支持任意css选择器，如果使用复合选择器时，勿直接将返回的`className`作为元素`className`|`class`使用，除非你定义的是一个简单的选择器，就像下面的示例那样。
+   *
    * 示例：`.my-class:hover`，`.my-class[attr=value]`...
    */
   selector?: string
@@ -133,6 +135,14 @@ export interface CssRuleOptions {
    * @default undefined
    */
   screen?: Screen
+  /**
+   * 自定义前缀
+   *
+   * 会和实例化时传入的全局前缀拼接
+   *
+   * @default ''
+   */
+  prefix?: string
 }
 
 export type SheetStore = {
@@ -263,8 +273,8 @@ export class CssInJs {
    * @returns {string} - 返回一个`className`。
    */
   public define(style: CssStyleMap, options: CssRuleOptions = {}): string {
-    const { selector = '', screen } = options
-    const cssRule = this.cssMapToCssRule(style, selector)
+    const { selector = '', screen, prefix = '' } = options
+    const cssRule = this.cssMapToCssRule(style, selector, prefix)
     const widget = getCurrentVNode()?.instance
     const sheet = screen
       ? this.getScreenSheet(screen)
@@ -312,11 +322,11 @@ export class CssInJs {
    * @returns {DynamicCssRule} - 返回一个动态样式对象。
    */
   public dynamic(style: CssStyle, options: CssRuleOptions = {}): DynamicCssRule {
-    const { selector = '', screen } = options
+    const { selector = '', screen, prefix = '' } = options
     if (!isRecordObject(style)) throw new TypeError(`CssInJs:style must be a record object`)
     if (!isReactive(style)) style = reactive(style)
     // 创建动态样式
-    const cssRule = this.cssMapToCssRule(style, selector)
+    const cssRule = this.cssMapToCssRule(style, selector, prefix)
     // 获取样式表
     const sheet = screen ? this.getScreenSheet(screen) : this.sheet.dynamic
     // 插入规则
@@ -417,10 +427,11 @@ export class CssInJs {
    *
    * @param {CssStyle} cssStyleMap - 样式对象
    * @param {string} selector - css选择器
+   * @param {string} prefix - 前缀
    * @private
    */
-  private cssMapToCssRule(cssStyleMap: CssStyleMap, selector: string): CssRule {
-    const { name, selectorText } = this.parseSelector(selector)
+  private cssMapToCssRule(cssStyleMap: CssStyleMap, selector: string, prefix: string): CssRule {
+    const { name, selectorText } = this.parseSelector(selector, prefix)
     const rule = cssMapToRuleStyle(cssStyleMap, selectorText)
     return { name, rule, selectorText }
   }
@@ -428,17 +439,18 @@ export class CssInJs {
    * 解析选择器
    *
    * @param {string} selector - 选择器
+   * @param {string} prefix - 前缀
    * @returns {{name: string, selectorText: string}} 返回一个对象，包含name和selectorText
    * @private
    */
-  private parseSelector(selector: string): Omit<CssRule, 'rule'> {
+  private parseSelector(selector: string, prefix: string): Omit<CssRule, 'rule'> {
     // 去除前后空格
     selector = selector.trim()
 
     // 如果选择器为空，生成默认的类名
     if (!selector) {
       // 生成随机的类名
-      const name = this.className()
+      const name = this.className(this.prefix + prefix)
       return {
         name,
         selectorText: `.${name}`

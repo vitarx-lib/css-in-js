@@ -112,5 +112,13 @@ interface CssRuleOptions {
     * @default undefined
     */
    screen?: keyof MediaScreenRule
+   /**
+    * 自定义前缀
+    *
+    * 会和实例化时传入的全局前缀拼接
+    *
+    * @default ''
+    */
+   prefix?: string
 }
 ```
