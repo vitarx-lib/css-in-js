@@ -1,4 +1,5 @@
-export type UUIDGenerator = () => string
+import { isRecordObject, isValueProxy } from 'vitarx'
+import { type CssStyleMap } from './css-in-js.js'
 
 /**
  * 创建唯一id生成器
@@ -12,9 +13,9 @@ export type UUIDGenerator = () => string
  * ```
  *
  * @param {number} [initialLength=5] - 初始长度,默认5
- * @returns {UUIDGenerator}
+ * @returns {() => string}
  */
-export function createUUIDGenerator(initialLength: number = 5): UUIDGenerator {
+export function createUUIDGenerator(initialLength: number = 5): () => string {
   let counter = 0
   let reset = 0
   const length = initialLength
@@ -78,4 +79,24 @@ export function isCSSStyleSheetSupported(): boolean {
   } catch (e) {
     return false
   }
+}
+
+/**
+ * 样式转字符串
+ *
+ * @param {CssStyle} cssStyleMap - 样式对象
+ * @param {string} selectorText - 选择器文本
+ * @private
+ */
+export function cssMapToRuleStyle(cssStyleMap: CssStyleMap, selectorText: string) {
+  if (isValueProxy(cssStyleMap)) cssStyleMap = cssStyleMap.value
+  if (!isRecordObject(cssStyleMap)) throw new TypeError(`CssInJs:style must be a record object`)
+  const rule = Object.entries(cssStyleMap)
+    .map(([key, value]) => {
+      // 将驼峰命名转换为短横线命名
+      const kebabKey = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+      return `${kebabKey}: ${String(value)};`
+    })
+    .join('')
+  return `${selectorText}{${rule}}`
 }
