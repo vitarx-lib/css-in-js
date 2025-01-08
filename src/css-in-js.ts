@@ -216,16 +216,7 @@ export class CssInJs {
   public get prefix(): string {
     return this.options.prefix
   }
-  /**
-   * 获取唯一的`className`
-   *
-   * 规则：`this.prefix`+`CssInJs.uuidGenerator()`
-   *
-   * @returns {string} - 返回一个随机且唯一的`className`。
-   */
-  private get className(): string {
-    return CssInJs.makeClassName(this.prefix)
-  }
+
   /**
    * 创建一个唯一类名，支持自定义前缀
    *
@@ -235,6 +226,7 @@ export class CssInJs {
   public static makeClassName(prefix: string = ''): string {
     return prefix + CssInJs.uuidGenerator()
   }
+
   /**
    * 单例模式工厂方法
    *
@@ -247,6 +239,19 @@ export class CssInJs {
     // 返回单例实例
     return this.instance
   }
+
+  /**
+   * 获取唯一的`className`
+   *
+   * 规则：`prefix`+`CssInJs.uuidGenerator()`
+   *
+   * @param {string} [prefix] - 前缀，不传入则使用默认前缀。
+   * @returns {string} - 返回一个随机且唯一的`className`。
+   */
+  public className(prefix?: string): string {
+    return CssInJs.makeClassName(prefix ?? this.prefix)
+  }
+
   /**
    * 定义样式
    *
@@ -270,9 +275,13 @@ export class CssInJs {
     // 监听样式变化
     if (isProxy(style)) {
       // 监听样式变化，并替换样式
-      const listener = watch(style, () =>
-        this.replaceCssRule(sheet, cssRule.rule, cssRule.selectorText)
-      )
+      const listener = watch(style, () => {
+        this.replaceCssRule(
+          sheet,
+          cssMapToRuleStyle(style, cssRule.selectorText),
+          cssRule.selectorText
+        )
+      })
       if (widget) {
         const onUnmounted = widget['onUnmounted']
         widget['onUnmounted'] = () => {
@@ -312,9 +321,13 @@ export class CssInJs {
     // 插入规则
     sheet.insertRule(cssRule.rule, sheet.cssRules.length)
     // 监听样式变化，并替换样式
-    const listener = watch(style, () =>
-      this.replaceCssRule(sheet, cssRule.rule, cssRule.selectorText)
-    )
+    const listener = watch(style, () => {
+      this.replaceCssRule(
+        sheet,
+        cssMapToRuleStyle(style, cssRule.selectorText),
+        cssRule.selectorText
+      )
+    })
     return {
       name: cssRule.name,
       selectorText: cssRule.selectorText,
@@ -424,7 +437,7 @@ export class CssInJs {
     // 如果选择器为空，生成默认的类名
     if (!selector) {
       // 生成随机的类名
-      const name = this.className
+      const name = this.className()
       return {
         name,
         selectorText: `.${name}`
