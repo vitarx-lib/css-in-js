@@ -70,7 +70,7 @@ npm install @vitarx/css-in-js
     }
     ```
    
-## 实例可选配置
+## 构造参数
 ```ts
 interface CssInJsOptions {
    /**
@@ -93,9 +93,44 @@ interface CssInJsOptions {
     */
    mediaScreenRule?: Partial<MediaScreenRule>
 }
+/**
+ * 屏幕尺寸断点规则
+ */
+interface MediaScreenRule {
+   /**
+    * 手机
+    *
+    * @default `@media screen and (max-width: 480px)`
+    */
+   xs: string
+   /**
+    * 小平板
+    *
+    * @default `@media screen and (min-width: 768px)`
+    */
+   sm: string
+   /**
+    * 普通平板
+    *
+    * @default `@media screen and (min-width: 992px)`
+    */
+   md: string
+   /**
+    * 大屏平板
+    *
+    * @default `@media screen and (min-width: 1200px)`
+    */
+   lg: string
+   /**
+    * 桌面显示器
+    *
+    * @default `@media screen and (min-width: 1920px)`
+    */
+   xl: string
+}
 ```
 
-## 样式可选配置
+## 规则可选配置
 ```ts
 interface CssRuleOptions {
    /**
