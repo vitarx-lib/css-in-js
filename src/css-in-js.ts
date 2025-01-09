@@ -53,39 +53,33 @@ export interface MediaScreenRule {
   /**
    * 手机
    *
-   * @default `@media screen and (max-width: 575px)`
+   * @default `@media screen and (max-width: 480px)`
    */
   xs: string
   /**
    * 小平板
    *
-   * @default `@media screen and (min-width: 576px) and (max-width: 767px)`
+   * @default `@media screen and (min-width: 768px)`
    */
   sm: string
   /**
    * 普通平板
    *
-   * @default `@media screen and (min-width: 768px) and (max-width: 991px)`
+   * @default `@media screen and (min-width: 992px)`
    */
   md: string
   /**
    * 大屏平板
    *
-   * @default `@media screen and (min-width: 992px) and (max-width: 1199px)`
+   * @default `@media screen and (min-width: 1200px)`
    */
   lg: string
   /**
-   * 小型显示器
+   * 桌面显示器
    *
-   * @default `@media screen and (min-width: 1200px) and (max-width: 1399px)`
+   * @default `@media screen and (min-width: 1920px)`
    */
   xl: string
-  /**
-   * 大型显示器
-   *
-   * @default `@media screen and (min-width: 1400px)`
-   */
-  xxl: string
 }
 
 /** 屏幕尺寸 */
@@ -200,12 +194,11 @@ export class CssInJs {
   private readonly options: DeepRequired<CssInJsOptions> = {
     prefix: '',
     mediaScreenRule: {
-      xs: `@media screen and (max-width: 575px)`,
-      sm: `@media screen and (min-width: 576px) and (max-width: 767px)`,
-      md: `@media screen and (min-width: 768px) and (max-width: 991px)`,
-      lg: `@media screen and (min-width: 992px) and (max-width: 1199px)`,
-      xl: `@media screen and (min-width: 1200px) and (max-width: 1399px)`,
-      xxl: `@media screen and (min-width: 1400px)`
+      xs: `@media screen and (max-width: 480px)`,
+      sm: `@media screen and (min-width: 768px)`,
+      md: `@media screen and (min-width: 992px)`,
+      lg: `@media screen and (min-width: 1200px)`,
+      xl: `@media screen and (min-width: 1920px)`
     }
   }
   /**
