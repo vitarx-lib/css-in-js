@@ -8,11 +8,11 @@ import {
 } from './css-in-js.js'
 
 /**
- * 定义样式(助手函数)
+ * 定义CSS样式(助手函数)
  *
  * @see {@linkcode CssInJs.define}
  */
-export function define(style: CssStyleMap, options: CssRuleOptions = {}): string {
+export function defineCssStyle(style: CssStyleMap, options?: CssRuleOptions): string {
   return CssInJs.factory().define(style, options)
 }
 /**
@@ -25,11 +25,11 @@ export function factory(options?: CssInJsOptions): CssInJs {
 }
 
 /**
- * 创建响应式样式(助手函数)
+ * 创建动态响应式CSS样式(助手函数)
  *
  * @see {@linkcode CssInJs.dynamic}
  */
-export function dynamic(style: CssStyle, options: CssRuleOptions = {}): DynamicCssRule {
+export function defineDynamicCssStyle(style: CssStyle, options?: CssRuleOptions): DynamicCssRule {
   return CssInJs.factory().dynamic(style, options)
 }
 
