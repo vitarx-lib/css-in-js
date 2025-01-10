@@ -12,13 +12,13 @@ import { type CssStyleMap } from './css-in-js.js'
  * const id = uuidGenerator()
  * ```
  *
- * @param {number} [initialLength=5] - 初始长度,默认5
+ * @param {number} [initialLength=2] - 初始长度，不能小于2
  * @returns {() => string}
  */
-export function createUUIDGenerator(initialLength: number = 5): () => string {
+export function createUUIDGenerator(initialLength: number = 2): () => string {
   let counter = 0
   let reset = 0
-  const length = initialLength
+  const length = Math.max(initialLength - 1, 1)
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' // 大小写字母
 
   // 获取后缀
