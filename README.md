@@ -155,5 +155,17 @@ interface CssRuleOptions {
     * @default ''
     */
    prefix?: string
+   /**
+    * 唯一的规则
+    *
+    * 通常需要配合`selector`使用，因为需要通过选择器去判断是否存在规则。
+    *
+    * 这个选项在重复样式的场景下，可以提高性能。
+    *
+    * > 注意：启用该选项后，CSS规则不随组件销毁而删除，但你可以通过{@linkcode CssInJs.removeStaticCssRule}删除它
+    *
+    * @default false
+    */
+   only?: boolean
 }
 ```
