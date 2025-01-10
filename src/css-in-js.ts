@@ -203,6 +203,10 @@ export class CssInJs {
   // 随机生成id
   static readonly uuidGenerator: () => string = createUUIDGenerator(3)
   /**
+   * 媒体屏幕查询标签
+   */
+  static readonly mediaScreenTags: Array<keyof MediaScreenRule> = ['xs', 'sm', 'md', 'lg', 'xl']
+  /**
    * 单实例
    *
    * @private
@@ -302,12 +306,20 @@ export class CssInJs {
   /**
    * 删除静态的CSS规则
    *
-   * @param selectorText - 完整的选择器文本
+   * @param {string} selectorText - 完整的选择器文本
+   * @param {Screen} [screen] - 对应的媒介查询"xs" | "sm" | "md" | "lg" | "xl"
    * @returns {void}
    */
-  public removeStaticCssRule(selectorText: string): void {
-    this.onlyCssSelector.delete(selectorText)
-    this.deleteRule(this.sheet.static, selectorText)
+  public removeStaticCssRule(selectorText: string, screen?: Screen | '*'): void {
+    if (screen === '*') {
+      for (const screen in this.sheet.screen) {
+        this.onlyCssSelector.delete(`${selectorText}&${screen || ''}`)
+        this.deleteRule(this.sheet.screen[screen as Screen]!, selectorText)
+      }
+    } else {
+      this.onlyCssSelector.delete(`${selectorText}&${screen || ''}`)
+      this.deleteRule(this.getCssStyleSheet(screen, 'static'), selectorText)
+    }
   }
 
   /**
@@ -336,15 +348,16 @@ export class CssInJs {
   public define(style: CssStyleMap, options?: CssRuleOptions): string {
     const { selector = '', screen = '', prefix = '', only = false } = options || {}
     const cssRule = this.cssMapToCssRule(style, selector, prefix)
+    const onlyCssKey = `${cssRule.selectorText}&${screen}`
     // 判断是否存在于唯一选择器中
-    if (only && this.onlyCssSelector.has(cssRule.selectorText)) return cssRule.name
+    if (only && this.onlyCssSelector.has(onlyCssKey)) return cssRule.name
     const widget = getCurrentVNode()?.instance
-    const sheet = this.getCssStyleSheet(screen, widget ? 'dynamic' : 'static')
+    const sheet = this.getCssStyleSheet(screen, only || !widget ? 'static' : 'dynamic')
     // 插入规则
     this.insertCssRule(sheet, cssRule)
     let listener: Listener | undefined
     // 缓存样式选择器
-    if (only) this.onlyCssSelector.add(cssRule.selectorText)
+    if (only) this.onlyCssSelector.add(onlyCssKey)
     if (widget) {
       // 监听样式变化
       if (isProxy(style)) {
