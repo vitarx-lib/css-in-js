@@ -246,6 +246,15 @@ export class CssInJs {
   }
 
   /**
+   * 样式表仓库
+   *
+   * @readonly
+   */
+  get sheetStore(): Readonly<SheetStore> {
+    return this.sheet
+  }
+
+  /**
    * 创建一个唯一类名，支持自定义前缀
    *
    * @param {string} [prefix] - 前缀。
