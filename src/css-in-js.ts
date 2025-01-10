@@ -200,7 +200,6 @@ export type SheetStore = {
  * ```
  */
 export class CssInJs {
-  static readonly isSupportedReplaceRule: boolean = isCSSStyleSheetSupported()
   // 随机生成id
   static readonly uuidGenerator: () => string = createUUIDGenerator(3)
   /**
@@ -333,7 +332,7 @@ export class CssInJs {
     const widget = getCurrentVNode()?.instance
     const sheet = this.getCssStyleSheet(screen, widget ? 'dynamic' : 'static')
     // 插入规则
-    this.insertCssRule(sheet, cssRule, false)
+    this.insertCssRule(sheet, cssRule)
     let listener: Listener | undefined
     // 缓存样式选择器
     if (only) this.onlyCssSelector.add(cssRule.selectorText)
@@ -412,8 +411,8 @@ export class CssInJs {
    * @private
    */
   private insertCssRule(sheet: CSSStyleSheet, cssRule: CssRule, replace: boolean = false) {
-    if (CssInJs.isSupportedReplaceRule) {
-      sheet.replaceSync(cssRule.rule)
+    if (!replace) {
+      sheet.insertRule(cssRule.rule, sheet.cssRules.length)
     } else {
       // 删除规则
       if (replace) this.deleteRule(sheet, cssRule.selectorText)
