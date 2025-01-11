@@ -23,7 +23,7 @@ export type StyledProps<T extends HTMLTags = 'div'> = HTMLProps<T> & {
   /**
    * 唯一的`className`名称。
    *
-   * 由于使用的simple定义的组件，没有生命周期，所以要求必须传入`forCss`来确保样式只被定义一次。
+   * 多个元素可以使用同一个`forCss`来使其共享同一组CSS样式规则。
    */
   forCss?: string
   /**
@@ -55,7 +55,7 @@ const StyledSimpleWidget = ({
   ...props
 }: StyledSimpleWidgetProps) => {
   const only = true
-  const className = forCss!
+  const className = String(forCss)!
   if (isRecordObject(css)) CssInJs.factory().define(css, { selector: className, only })
   if (isRecordObject(cssIn)) {
     for (const screen of CssInJs.mediaScreenTags) {
@@ -97,8 +97,10 @@ export const Styled = new Proxy({} as HTMLWidgets, {
 
 /**
  * 样式小部件
+ *
+ * 所有的样式都是跟随小部件生命周期的，小部件实例销毁时样式也随之销毁。
  */
-export class StyledWidget<T extends StyledProps> extends Widget<T> {
+export class StyledWidget<T extends StyledProps = StyledProps> extends Widget<T> {
   // 排除继承属性，其他属性都会被继承给根元素
   static readonly excludeInheritProps = ['tag', 'forCss', 'css', 'cssIn']
   // 样式类名
@@ -109,7 +111,7 @@ export class StyledWidget<T extends StyledProps> extends Widget<T> {
     if ('tag' in props && typeof props.tag !== 'string') {
       throw new TypeError(`StyledWidget: tag must be a string`)
     }
-    this.className = CssInJs.factory().className(CssInJs.factory().prefix || 'styled-')
+    this.className = String(props.forCss) || CssInJs.factory().className()
     if (isRecordObject(props.css)) {
       CssInJs.factory().define(props.css, { selector: this.className })
     }
