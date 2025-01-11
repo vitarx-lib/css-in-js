@@ -106,3 +106,21 @@ export function cssMapToRuleStyle(cssStyleMap: CssStyleMap, selectorText: string
 
   return `${selectorText}{${rule}}`
 }
+
+/**
+ * 格式化CSS选择器
+ *
+ * 如果没有 . 开头，且 不是 @ 开头或 # 开头，则添加 .
+ *
+ * @param {string} selector
+ * @returns {string}
+ */
+export function formatSelector(selector: string): string {
+  // 去除前后空格
+  selector = selector.trim()
+  // 如果没有 . 开头
+  if (!selector.startsWith('.') && !selector.startsWith('#') && !selector.startsWith('@')) {
+    return `.${selector}` // 为选择器添加 .
+  }
+  return selector
+}
