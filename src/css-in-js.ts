@@ -10,8 +10,7 @@ import {
   type Reactive,
   reactive,
   type ValueProxy,
-  VNodeManager,
-  watch
+  VNodeManager
 } from 'vitarx'
 import {
   createUUIDGenerator,
@@ -380,12 +379,18 @@ export class CssInJs {
     if (only || !isDynamic) this.staticCssRuleSet.add(onlyCssKey)
     if (isDynamic) {
       // 监听样式变化，并替换样式
-      watch(style, () => {
-        cssRule.rule = cssMapToRuleStyle(style, cssRule.selectorText)
-        this.insertCssRule(sheet, cssRule, true)
-      })
+      const listener = Observers.register(
+        style,
+        new Listener(() => {
+          cssRule.rule = cssMapToRuleStyle(style, cssRule.selectorText)
+          this.insertCssRule(sheet, cssRule, true)
+        })
+      )
       if (!only) {
-        VNodeManager.onDestroyed(vnode!, () => this.deleteRule(sheet, cssRule.selectorText))
+        VNodeManager.onDestroyed(vnode!, () => {
+          listener.destroy()
+          this.deleteRule(sheet, cssRule.selectorText)
+        })
       }
     }
     return cssRule.name
