@@ -1,63 +1,71 @@
 import {
   deepMergeObject,
   getCurrentVNode,
-  isArray,
   isProxy,
-  isReactive,
   isRecordObject,
+  isValueProxy,
   Listener,
-  Observers,
   type Reactive,
-  reactive,
   type ValueProxy,
-  VNodeManager
+  type VNode,
+  VNodeManager,
+  watch
 } from 'vitarx'
 import {
   createUUIDGenerator,
-  cssMapToRuleStyle,
+  cssStyleMapToCssRuleText,
   formatSelector,
-  isCSSStyleSheetSupported
+  formatStyleKey,
+  formatStyleValue,
+  isCSSStyleSheetSupported,
+  removePriority
 } from './utils.js'
 
-export interface CssRule {
+/**
+ * css样式规则对象
+ *
+ * 扩展了如下属性：
+ * - `name`属性是从`selectorText`中提取出的，如果selectorText是一个id选择器，则提取到的是id名，类选择器则是`className`，
+ * - `className`同`name`一致，
+ * - `listener`属性是响应式样式的监听器，如果不是响应式或作用域已销毁则为undefined，
+ * - `toString`方法返回的是`name`。
+ *
+ * @extends CSSStyleRule
+ * @see {@link https://developer.mozilla.org/zh-CN/docs/Web/API/CSSStyleRule CSSStyleRule}
+ */
+export interface CssStyleRule extends CSSStyleRule {
+  /**
+   * 从`selectorText`中提取出的`className`
+   *
+   * > 注意：如果是自定义选择器，可能提取出的`className`不准确。
+   */
   name: string
-  rule: string
-  selectorText: string
+  /**
+   * 从`selectorText`中提取出的`className`
+   *
+   * > 注意：如果是自定义选择器，可能提取出的`className`不准确。
+   */
+  className: string
+  /**
+   * 响应式样式监听器
+   *
+   * 如果定义规则时传入的style是响应式对象，则会在第一次定义该规则时开始监听变化自动更新样式。
+   *
+   * 如果它是在组件作用域内时，组件销毁会自动取消监听，移除该监听器，但不在组件作用域中时，该监听器会一直存在，
+   * 需手动`listener?.destroy()`
+   */
+  listener?: Listener
+  /**
+   * 转换为字符串
+   *
+   * @returns {string} - 返回的是`name`
+   */
+  toString(): string
 }
-
 /**
  * css属性映射
  */
 export type CssStyle = Vitarx.CssStyle
-
-/**
- * 动态样式
- */
-export interface DynamicCssRule {
-  /**
-   * className
-   */
-  readonly name: string
-  readonly selectorText: string
-  /**
-   * 响应式样式对象
-   *
-   * 更新对象属性值则会自动更新样式，不可以直接对`style`赋值，只能操作其属性。
-   */
-  readonly style: Reactive<CssStyle>
-
-  /**
-   * 转换为字符串
-   *
-   * @returns {string} 返回`name`
-   */
-  toString(): string
-
-  /**
-   * 删除样式
-   */
-  remove(): void
-}
 
 /**
  * 屏幕尺寸断点规则
@@ -129,19 +137,18 @@ export interface CssRuleOptions {
   /**
    * 自定义选择器
    *
-   * 原理上支持任意css选择器，如果使用复合选择器时，勿直接将返回的`className`作为元素`className`|`class`使用，除非你定义的是一个简单的选择器，就像下面的示例那样。
+   * 选择器开头部分不支持元素选择器，但你可以在选择器片段中组合其他选择器。
    *
-   * 示例：`.my-class:hover`，`.my-class[attr=value]`...
+   * 原理上支持任意css选择器（id选择器，类选择器，伪类选择器，伪元素选择器，组合选择器，子选择器，子元素选择器，子元素选择器...），
+   * 如果使用自定义选择器时，勿直接将返回的`className`作为元素`className`|`class`使用，
+   * 除非你定义的是一个简单的选择器，就像下面的示例那样，否则返回的`className`可能解析的不够准确。
+   *
+   * 示例：`.my-class:hover`，`.my-class[attr="value"]`...
+   *
+   * > 注意：不要@，例如@import，@font-face，@keyframes，@media...，
+   * 常用的自适应屏幕断点，已内置了媒介查询样式表，可以使用`screen`配置需要适配的屏幕。
    */
   selector?: string
-  /**
-   * 适配屏幕尺寸
-   *
-   * 样式会写入对应的媒介查询中
-   *
-   * @default undefined
-   */
-  screen?: Screen
   /**
    * 自定义前缀
    *
@@ -151,24 +158,49 @@ export interface CssRuleOptions {
    */
   prefix?: string
   /**
-   * 唯一的规则
+   * 适配屏幕尺寸
    *
-   * 通常需要配合`selector`使用，因为需要通过选择器去判断是否存在规则。
+   * 样式会写入对应的媒介查询中
    *
-   * > 注意：启用该选项后，CSS规则不随组件销毁而删除，但你可以通过{@linkcode CssInJs.removeStaticCssRule}删除它
-   *
-   * @default false
+   * @default undefined
    */
-  only?: boolean
+  screen?: Screen
+  /**
+   * 是否只读
+   *
+   * 因为{@link https://developer.mozilla.org/zh-CN/docs/Web/API/CSSStyleSheet CSSStyleSheet}删除规则使用的是index索引，
+   * 删除规则需要重构索引，付出昂贵的代价，所以提供了`readonly`只读的概念，不随组件销毁而删除，不影响样式的修改。
+   *
+   * 默认值：
+   * - 如果传入了选择器：true；
+   * - 如果没有传入选择器且不在组件作用域内：true；
+   * - 其他情况默认为`false`，因为动态选择器无法在组件下一个生命周期中复用，会随组件生命周期销毁而失效。
+   *
+   * @default `selector ? true : false`
+   */
+  readonly?: boolean
 }
 
 type ScreenCssStyleSheetMap = {
   [k in Screen]?: CSSStyleSheet
 }
-export type SheetStore = {
+
+export type CSSSheetStore = {
+  /**
+   * 动态样式
+   */
   dynamic: CSSStyleSheet
-  static: CSSStyleSheet
-  screen: ScreenCssStyleSheetMap
+  /**
+   * 静态样式
+   */
+  readonly: CSSStyleSheet
+  /**
+   * 针对屏幕的样式表
+   */
+  screen: {
+    dynamic: ScreenCssStyleSheetMap
+    readonly: ScreenCssStyleSheetMap
+  }
 }
 
 /**
@@ -182,22 +214,32 @@ export type SheetStore = {
  *
  * // 实例化 cssInJs
  * const cssInJs = new CssInJs('my-')
+ *
  * // 在组件外部定义的样式是全局样式，不会随组件销毁自动删除
- * const className = cssInJs.define({color: 'red'}) // 随机生成className
- * console.log(className) // my-XjXAd
+ * const rule = cssInJs.define({color: 'red'})
+ * console.log(rule.name) // my-AwQ  随机生成的类名，可以直接使用在html元素的class|className属性中
  *
- * // 自定义选择器
- * cssInJs.define({color: 'red'}, '.my-class') // my-class
- * // 伪类支持
- * cssInJs.define({color: 'red'}, '.my-class:hover') // my-class
+ * // 直接返回一个类名
+ * const className = cssInJs.defineNamed({color: 'red'})
  *
- * // 响应式样式
+ * // 自定义选择器，不仅仅只支持伪类你可以传入任何选择器，只要开头是类选择器或id选择器即可
+ * cssInJs.define({color: 'red'}, '.my-class:hover')
+ *
+ * // 修改样式
  * const Button:Vitarx.FN = () => {
  *   // 组件销毁时会自动移除该样式
- *   const buttonCssRule = cssInJs.reactive({color: 'red'})
+ *   const buttonCssRule = cssInJs.define({color: 'red'})
  *   const switchColor = () => {
- *    // 动态更改样式
+ *    // 更改样式
  *    buttonCssRule.style.color = buttonCssRule.style.color === 'red' ? 'blue' : 'red'
+ *
+ *    // 使用`setProperty`方法设置样式
+ *    // @see https://developer.mozilla.org/zh-CN/docs/Web/API/CSSStyleDeclaration/setProperty
+ *    // buttonCssRule.style.setProperty('color', 'blue')
+ *
+ *    // 删除样式
+ *    // @see https://developer.mozilla.org/zh-CN/docs/Web/API/CSSStyleDeclaration/removeProperty
+ *    // buttonCssRule.style.removeProperty('color')
  *   }
  *   return <button className={buttonCssRule.name} onClick={switchColor}>切换颜色</button>
  * }
@@ -217,7 +259,7 @@ export class CssInJs {
    */
   private static instance: CssInJs | null = null
   // 样式表
-  private readonly sheet: SheetStore
+  private readonly sheet: CSSSheetStore
   // 配置项
   private readonly options: DeepRequired<CssInJsOptions> = {
     prefix: '',
@@ -229,8 +271,11 @@ export class CssInJs {
       xl: `@media screen and (min-width: 1920px)`
     }
   }
-  // 静态css规则集
-  private readonly staticCssRuleSet = new Set<string>()
+  // 规则映射 样式表 -> Map<规则选择器文本, CssStyleRule>
+  private readonly sheetCSSRuleMap = new WeakMap<CSSStyleSheet, Map<string, CssStyleRule>>()
+  // vnode作用域样式表映射 vnode -> Map<样式表, Set<规则选择器文本>>
+  private readonly vnodeCssRuleMap = new WeakMap<VNode, Map<CSSStyleSheet, Set<string>>>()
+
   /**
    * 创建一个CssInJs实例
    *
@@ -243,8 +288,11 @@ export class CssInJs {
     if (options) deepMergeObject(this.options, options)
     this.sheet = {
       dynamic: CssInJs.createStyleSheet(),
-      static: CssInJs.createStyleSheet(),
-      screen: {}
+      readonly: CssInJs.createStyleSheet(),
+      screen: {
+        dynamic: {},
+        readonly: {}
+      }
     }
   }
 
@@ -258,7 +306,7 @@ export class CssInJs {
    *
    * @readonly
    */
-  get sheetStore(): Readonly<SheetStore> {
+  get sheetStore(): Readonly<CSSSheetStore> {
     return this.sheet
   }
 
@@ -286,6 +334,46 @@ export class CssInJs {
   }
 
   /**
+   * 替换规则样式
+   *
+   * @param {CssStyleRule} rule - CSSStyleRule
+   * @param {CssStyleMap} style - 样式对象
+   * @private
+   */
+  public static replaceRuleStyle(rule: CssStyleRule, style: CssStyleMap): void {
+    if (isValueProxy(style)) style = style.value
+    // 格式化完毕的样式
+    const formatedStyles: Record<string, [string, string]> = {}
+
+    // 将 style 中的有效属性更新到 rule.style
+    for (const property in style) {
+      const value = formatStyleValue(style[property])
+      if (value !== null) {
+        const newValue = removePriority(value)
+        formatedStyles[formatStyleKey(property)] = [newValue, newValue === value ? '' : 'important']
+      }
+    }
+
+    // 遍历 rule.style，处理删除和更新的逻辑
+    for (let i = rule.style.length - 1; i >= 0; i--) {
+      const property = rule.style[i]
+      if (property in formatedStyles) {
+        // 如果属性存在于 formatedStyles 中，更新它
+        rule.style.setProperty(property, formatedStyles[property][0], formatedStyles[property][1])
+        delete formatedStyles[property] // 更新后移除，避免后续重复设置
+      } else {
+        // 如果属性不在 formatedStyles 中，移除它
+        rule.style.removeProperty(property)
+      }
+    }
+
+    // 剩下的 formatedStyles 中的属性需要新增
+    for (const property in formatedStyles) {
+      rule.style.setProperty(property, formatedStyles[property][0], formatedStyles[property][1])
+    }
+  }
+
+  /**
    * 创建一个样式表
    *
    * @returns {CSSStyleSheet} - CSSStyleSheet。
@@ -308,39 +396,6 @@ export class CssInJs {
   }
 
   /**
-   * 删除静态的CSS规则
-   *
-   * @param {string} selector - 选择器
-   * @param {Screen} [screen] - 对应的媒介查询"xs" | "sm" | "md" | "lg" | "xl"
-   * @returns {void}
-   */
-  public removeStaticCssRule(selector: string, screen?: Screen | '*' | Screen[]): void {
-    const selectorText = formatSelector(selector)
-    if (screen === '*') {
-      for (const item in this.sheet.screen) {
-        if (this.staticCssRuleSet.delete(`${selectorText}&${item || ''}`)) {
-          this.deleteRule(this.sheet.screen[item as Screen]!, selectorText)
-        }
-      }
-      return
-    }
-    if (isArray(screen)) {
-      for (const item of screen) {
-        if (
-          this.sheet.screen[item] &&
-          this.staticCssRuleSet.delete(`${selectorText}&${item || ''}`)
-        ) {
-          this.deleteRule(this.sheet.screen[item], selectorText)
-        }
-      }
-      return
-    }
-    if (this.staticCssRuleSet.delete(`${selectorText}&${screen || ''}`)) {
-      this.deleteRule(this.getCssStyleSheet(screen, 'static'), selectorText)
-    }
-  }
-
-  /**
    * 获取唯一的`className`
    *
    * 规则：`prefix`+`CssInJs.uuidGenerator()`
@@ -355,180 +410,225 @@ export class CssInJs {
   /**
    * 定义Css规则
    *
-   * 当传入的样式是一个标准的可监听对象时，会自动监听其变化，并替换样式，前提条件它必须是在组件作用域中。
+   * @example
+   * const rule = CssInJs.factory().define({fontSize: '20px',color: 'red'})
+   * // 元素中使用该规则 rule.name || rule.className都能访问到自动生成的`className`
+   * const Title = () => <h1 className={rule.name}>标题</h1>
    *
-   * 如果是在组件作用域中定义的样式，会随组件销毁自动删除，only选项为true时不会删除。
-   *
-   * @param {CssStyleMap} style - 样式对象，支持传入响应式对象，包括但不限于 `Reactive`、`Ref`、`Computed`。
+   * @param {CssStyleMap} style - 样式对象。
    * @param {CssRuleOptions} [options] - 可选配置项
-   * @returns {string} - `className`。
+   * @returns {CssStyleRule} - `CSSRule`对象。
    */
-  public define(style: CssStyleMap, options?: CssRuleOptions): string {
-    const { selector = '', screen = '', prefix = '', only = false } = options || {}
-    const cssRule = this.parseSelector(selector, prefix) as CssRule
-    const onlyCssKey = `${cssRule.selectorText}&${screen}`
-    // 判断是否存在于唯一选择器中
-    if (only && this.staticCssRuleSet.has(onlyCssKey)) return cssRule.name
+  public define(style: CssStyleMap, options: CssRuleOptions = {}): CssStyleRule {
+    if (!isRecordObject(options)) {
+      throw new TypeError(`CssInJs.define:options must be a object`)
+    }
+
+    const { selector = '', screen = '', prefix = '', readonly } = options
+
+    // 获取当前虚拟节点
     const vnode = getCurrentVNode()
-    const isDynamic = vnode && isProxy(style)
-    cssRule.rule = cssMapToRuleStyle(style, cssRule.selectorText)
-    const sheet = this.getCssStyleSheet(screen, isDynamic && !only ? 'dynamic' : 'static')
-    // 插入规则
-    this.insertCssRule(sheet, cssRule)
-    // 缓存样式选择器
-    if (only || !isDynamic) this.staticCssRuleSet.add(onlyCssKey)
-    if (isDynamic) {
-      // 监听样式变化，并替换样式
-      const listener = Observers.register(
-        style,
-        new Listener(() => {
-          cssRule.rule = cssMapToRuleStyle(style, cssRule.selectorText)
-          this.insertCssRule(sheet, cssRule, true)
-        })
-      )
-      if (!only) {
-        VNodeManager.onDestroyed(vnode!, () => {
-          listener.destroy()
-          this.deleteRule(sheet, cssRule.selectorText)
-        })
-      }
-    }
-    return cssRule.name
-  }
 
-  /**
-   * 判断规则是否已定义规则
-   *
-   * @param {string} selector - 选择器
-   * @param {Screen} [screen] - 媒介查询
-   * @returns {boolean} - 返回一个布尔值，表示是否已定义规则。
-   */
-  public hasStaticCss(selector: string, screen?: Screen): boolean {
-    selector = formatSelector(selector)
-    return this.staticCssRuleSet.has(`${selector}&${screen || ''}`)
-  }
+    // 是否为静态CSS规则
+    const isStaticCssRule = Boolean(readonly === undefined ? selector.trim() || !vnode : readonly)
 
-  /**
-   * 定义动态Css规则
-   *
-   * 此方法返回一个`ReactiveCssRule`对象，可以通过`ReactiveCssRule.style`更新样式。
-   *
-   * @remarks
-   * 注意：此方法中启用的监听器不受作用域管理，不管在任何地方定义，它都不会自动销毁，不再使用该样式时需调用`ReactiveCssRule.remove()`删除。
-   *
-   * @param {CssStyle} style - 样式对象，只能传入普通的键值对对象或者`Reactive`对象，普通的键值对对象会自动转换为`Reactive`。
-   * @param {CssRuleOptions} [options] - 可选配置项
-   * @returns {DynamicCssRule} - 动态Css规则对象。
-   */
-  public dynamic(style: CssStyle, options: Omit<CssRuleOptions, 'only'> = {}): DynamicCssRule {
-    const { selector = '', screen, prefix = '' } = options
-    if (!isRecordObject(style)) throw new TypeError(`CssInJs:style must be a record object`)
-    if (!isReactive(style)) style = reactive(style)
-    // 创建动态样式
-    const cssRule = this.cssMapToCssRule(style, selector, prefix)
     // 获取样式表
-    const sheet = this.getCssStyleSheet(screen, 'dynamic')
-    // 插入规则
-    this.insertCssRule(sheet, cssRule)
-    // 监听样式变化，并替换样式
-    const listener = new Listener(() => {
-      cssRule.rule = cssMapToRuleStyle(style, cssRule.selectorText)
-      this.insertCssRule(sheet, cssRule, true)
-    })
-    Observers.register(style, listener)
-    return {
-      name: cssRule.name,
-      selectorText: cssRule.selectorText,
-      style: style as Reactive<CssStyle>,
-      toString: () => {
-        return cssRule.name
-      },
-      remove: () => {
-        listener.destroy()
-        this.deleteRule(sheet, cssRule.selectorText)
-      }
-    }
+    const sheet = this.getCssStyleSheet(screen, isStaticCssRule ? 'readonly' : 'dynamic')
+
+    // 插入规则并获取 CSSStyleRule
+    const rule = this.insertRule(sheet, style, selector, prefix)
+
+    // 处理虚拟节点的规则映射，节点销毁自动删除节点样式
+    if (vnode && !isStaticCssRule) this.handleVNodeCssRules(vnode, sheet, rule)
+
+    return rule
   }
 
   /**
-   * 插入一条规则
+   * `define`方法的语法糖，返回`CssStyleRule.name`
    *
-   * @param {CSSStyleSheet} sheet - 样式表。
-   * @param {{rule:string, selectorText:string}} cssRule - CssRule对象。
-   * @param {boolean} [replace=false] - 是否替换规则，默认为false。
+   * @example
+   * const className = CssInJs.factory().defineNamed({fontSize: '20px',color: 'red'})
+   * const Title = () => <h1 className={className}>标题</h1>
+   *
+   * @param {CssStyleMap} style - 样式对象。
+   * @param {CssRuleOptions} [options] - 可选配置项
    */
-  public insertCssRule(
-    sheet: CSSStyleSheet,
-    cssRule: Omit<CssRule, 'name'>,
-    replace: boolean = false
-  ) {
-    if (!replace) {
-      sheet.insertRule(cssRule.rule, sheet.cssRules.length)
-    } else {
-      // 删除规则
-      if (replace) this.deleteRule(sheet, cssRule.selectorText)
-      // 插入新的规则
-      sheet.insertRule(cssRule.rule, sheet.cssRules.length)
-    }
+  public defineNamed(style: CssStyleMap, options: CssRuleOptions = {}): string {
+    return this.define(style, options).name
   }
 
   /**
    * 删除规则
    *
-   * @param sheet
-   * @param selectorText
-   * @private
+   * @param {CSSStyleSheet} sheet - 样式表
+   * @param {string | string[] | Set<string>} selectors - 选择器
+   * @returns {void}
    */
-  public deleteRule(sheet: CSSStyleSheet, selectorText: string | string[]): void {
-    const selectors = Array.isArray(selectorText) ? selectorText : [selectorText]
-    for (let i = 0; i < selectors.length; i++) {
-      selectors[i] = formatSelector(selectors[i])
+  private deleteRule(sheet: CSSStyleSheet, selectors: string | Set<string> | string[]): void {
+    // 获取当前样式表的规则映射
+    const sheetMap = this.sheetCSSRuleMap.get(sheet)
+    // 如果没有规则映射，直接返回
+    if (!sheetMap) return
+    // 如果 selectors 不是 Set，确保其为数组并格式化
+    let selectorSet: Set<string>
+    if (selectors instanceof Set) {
+      // 对 Set 中的每个选择器进行 formatSelector 处理
+      selectorSet = new Set(Array.from(selectors).map(formatSelector))
+    } else {
+      // 如果是字符串或数组，格式化并转换为 Set
+      const selectorsArray = Array.isArray(selectors) ? selectors : [selectors]
+      selectorSet = new Set(selectorsArray.map(formatSelector))
     }
+
+    // 删除映射中的规则
+    for (const selector of selectorSet) {
+      if (sheetMap.has(selector)) {
+        sheetMap.delete(selector)
+      } else {
+        selectorSet.delete(selector)
+      }
+    }
+
+    // 如果没有需要删除的规则，直接返回
+    if (selectorSet.size === 0) return
+
+    // 遍历所有的 CSS 规则，删除匹配的规则
     for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
       const rule = sheet.cssRules[i]
       // 检查是否是样式规则 (CSSStyleRule)
-      if (rule instanceof CSSStyleRule && selectors.includes(rule.selectorText)) {
+      if (rule instanceof CSSStyleRule && selectorSet.has(rule.selectorText)) {
         sheet.deleteRule(i)
-        return
+        selectorSet.delete(rule.selectorText)
+        if (selectorSet.size === 0) break
       }
     }
   }
 
   /**
-   * 获取屏幕样式表
+   * 插入规则
    *
-   * @param screen
-   * @param type
-   * @private
-   */
-  private getCssStyleSheet(screen: any, type: 'static' | 'dynamic' = 'static'): CSSStyleSheet {
-    if (screen in this.options.mediaScreenRule) {
-      if (!this.sheet.screen[<Screen>screen]) {
-        const i = this.sheet.static.insertRule(
-          `${this.options.mediaScreenRule[<Screen>screen]}{}`,
-          this.sheet.static.cssRules.length
-        )
-        this.sheet.screen[<Screen>screen] = this.sheet.static.cssRules[
-          i
-        ] as unknown as CSSStyleSheet
-      }
-      return this.sheet.screen[<Screen>screen]!
-    }
-    return type === 'static' ? this.sheet.static : this.sheet.dynamic
-  }
-
-  /**
-   * 样式转换为CssRule
-   *
-   * @param {CssStyle} cssStyleMap - 样式对象
-   * @param {string} selector - css选择器
+   * @param {CSSStyleSheet} sheet - 样式表
+   * @param {CssStyleMap} style - 样式对象
+   * @param {string} selector - 选择器
    * @param {string} prefix - 前缀
+   * @returns {CssStyleRule} - 返回`CssStyleRule`对象。
+   */
+  private insertRule(
+    sheet: CSSStyleSheet,
+    style: CssStyleMap,
+    selector: string,
+    prefix: string
+  ): CssStyleRule {
+    const { name, selectorText } = this.parseSelector(selector, prefix)
+    // 获取缓存的 CssStyleRule
+    const cachedCssRule = this.sheetCSSRuleMap.get(sheet)?.get(selectorText)
+    if (cachedCssRule) {
+      this.watchProxyStyleChange(cachedCssRule, style)
+      return cachedCssRule
+    }
+    // 生成规则文本
+    const ruleText = cssStyleMapToCssRuleText(style, selectorText)
+    let index = 0
+    try {
+      // 写入规则
+      index = sheet.insertRule(ruleText, sheet.cssRules.length)
+    } catch (e) {
+      throw new Error(
+        `CssInJs.insertRule: 未能成功插入CSS规则，请检查样式是否存在错误，message-${e}`
+      )
+    }
+    const cssRule = sheet.cssRules[index] as CssStyleRule
+    if (!(cssRule instanceof CSSStyleRule)) {
+      throw new Error(`CssInJs.insertRule:${ruleText} 不是有效的CSSStyleRule`)
+    }
+    this.watchProxyStyleChange(cssRule, style)
+    Object.defineProperty(cssRule, 'name', {
+      value: name
+    })
+    Object.defineProperty(cssRule, 'className', {
+      value: name
+    })
+    Object.defineProperty(cssRule, 'toString', {
+      value() {
+        return name
+      },
+      configurable: true,
+      writable: true
+    })
+    return cssRule
+  }
+
+  /**
+   * 监听代理样式变化
+   *
+   * @param rule
+   * @param style
    * @private
    */
-  private cssMapToCssRule(cssStyleMap: CssStyleMap, selector: string, prefix: string): CssRule {
-    const { name, selectorText } = this.parseSelector(selector, prefix)
-    const rule = cssMapToRuleStyle(cssStyleMap, selectorText)
-    return { name, rule, selectorText }
+  private watchProxyStyleChange(rule: CssStyleRule, style: CssStyleMap) {
+    if (isProxy(style) && !rule.hasOwnProperty('listener')) {
+      const listener = watch(style, () => CssInJs.replaceRuleStyle(rule, style))
+      Object.defineProperty(rule, 'listener', {
+        value: listener,
+        configurable: true // 允许删除
+      })
+      listener.onDestroyed(() => delete rule.listener)
+    }
+  }
+
+  /**
+   * 处理虚拟节点的样式规则映射
+   *
+   * @param vnode - 当前虚拟节点
+   * @param sheet - 当前样式表
+   * @param rule - 当前CSS规则
+   */
+  private handleVNodeCssRules(vnode: VNode, sheet: CSSStyleSheet, rule: CssStyleRule) {
+    if (!this.vnodeCssRuleMap.has(vnode)) {
+      const vnodeRuleMap = new Map([[sheet, new Set([rule.selectorText])]])
+      this.vnodeCssRuleMap.set(vnode, vnodeRuleMap)
+    } else {
+      const vnodeRuleMap = this.vnodeCssRuleMap.get(vnode)!
+      if (vnodeRuleMap.has(sheet)) {
+        vnodeRuleMap.get(sheet)!.add(rule.selectorText)
+      } else {
+        vnodeRuleMap.set(sheet, new Set([rule.selectorText]))
+      }
+    }
+    VNodeManager.onDestroyed(vnode, () => {
+      const vnodeRuleMap = this.vnodeCssRuleMap.get(vnode)
+      if (vnodeRuleMap) {
+        vnodeRuleMap.forEach((selectors, table) => {
+          this.deleteRule(table, selectors)
+          selectors.clear()
+        })
+        vnodeRuleMap.clear()
+      }
+      this.vnodeCssRuleMap.delete(vnode)
+    })
+  }
+
+  /**
+   * 获取CSS样式表
+   *
+   * @param {any} screen - 屏幕预设断点
+   * @param {'readonly' | 'dynamic'} type - 类型
+   * @private
+   */
+  private getCssStyleSheet(screen: any, type: 'readonly' | 'dynamic'): CSSStyleSheet {
+    if (screen in this.options.mediaScreenRule) {
+      const screenSheetMap = this.sheet.screen[type]
+      if (!screenSheetMap[<Screen>screen]) {
+        const i = this.sheet.readonly.insertRule(
+          `${this.options.mediaScreenRule[<Screen>screen]}{}`,
+          this.sheet.readonly.cssRules.length
+        )
+        screenSheetMap[<Screen>screen] = this.sheet.readonly.cssRules[i] as unknown as CSSStyleSheet
+      }
+      return screenSheetMap[<Screen>screen]!
+    }
+    return this.sheet[type]
   }
 
   /**
@@ -539,7 +639,7 @@ export class CssInJs {
    * @returns {{name: string, selectorText: string}} 返回一个对象，包含name和selectorText
    * @private
    */
-  private parseSelector(selector: string, prefix: string): Omit<CssRule, 'rule'> {
+  private parseSelector(selector: string, prefix: string): { name: string; selectorText: string } {
     // 去除前后空格
     selector = selector.trim()
 
@@ -552,23 +652,19 @@ export class CssInJs {
         selectorText: `.${name}`
       }
     }
-
+    if (selector.startsWith('@')) {
+      throw new TypeError(`CssInJs:selector can not start with '@'`)
+    }
     // 提取基础选择器部分，去掉伪类和属性选择器
     const baseSelector = selector.split(':')[0].split('[')[0].trim()
-
-    // 如果没有 . 开头
-    if (
-      !baseSelector.startsWith('.') &&
-      !baseSelector.startsWith('#') &&
-      !baseSelector.startsWith('@')
-    ) {
+    // 如果没有 . # 开头，则默认添加.
+    if (!baseSelector.startsWith('.') && !baseSelector.startsWith('#')) {
       return {
         name: baseSelector, // 使用原始选择器作为名字
         selectorText: `.${selector}` // 为选择器添加 .
       }
     }
 
-    // 如果是类选择器，直接返回
     return {
       name: baseSelector.slice(1), // 去掉开头的点
       selectorText: selector
