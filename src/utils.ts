@@ -1,4 +1,4 @@
-import { isRecordObject, isValueProxy } from 'vitarx'
+import { isNumber, isRecordObject, isString, isValueProxy } from 'vitarx'
 import { type CssStyleMap } from './css-in-js.js'
 
 /**
@@ -82,23 +82,54 @@ export function isCSSStyleSheetSupported(): boolean {
 }
 
 /**
+ * 格式化样式值
+ *
+ * @param value
+ * @returns {null|string} - 返回null代表值无效
+ */
+export function formatStyleValue(value: any): null | string {
+  if (isString(value) && removePriority(value).length > 0) {
+    value = value.trim()
+    return value.length > 0 ? value : null
+  }
+  if (isNumber(value)) return String(value)
+  return null
+}
+
+/**
+ * 删除样式的优先级
+ *
+ * @param value
+ */
+export function removePriority(value: string): string {
+  return value.includes('!important') ? value.replace('!important', '').trim() : value.trim()
+}
+
+/**
+ * 格式化样式key
+ *
+ * @param key
+ * @returns {string}
+ */
+export function formatStyleKey(key: string): string {
+  return key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+}
+/**
  * 样式转字符串
  *
  * @param {CssStyle} cssStyleMap - 样式对象
  * @param {string} selectorText - 选择器文本
  * @private
  */
-export function cssMapToRuleStyle(cssStyleMap: CssStyleMap, selectorText: string) {
+export function cssStyleMapToCssRuleText(cssStyleMap: CssStyleMap, selectorText: string): string {
   if (isValueProxy(cssStyleMap)) cssStyleMap = cssStyleMap.value
   if (!isRecordObject(cssStyleMap)) throw new TypeError(`CssInJs:style must be a record object`)
 
   const rule = Object.entries(cssStyleMap)
     .reduce((acc, [key, value]) => {
-      // 过滤掉值为 null 或 undefined 的样式
-      if (value || value === '0' || value === 0) {
-        // 将驼峰命名转换为短横线命名
-        const kebabKey = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-        acc.push(`${kebabKey}: ${String(value)};`)
+      value = formatStyleValue(value)
+      if (value !== null) {
+        acc.push(`${formatStyleKey(key)}: ${value};`)
       }
       return acc
     }, [] as string[])
