@@ -120,12 +120,11 @@ export interface CssInJsOptions {
    * 屏幕尺寸断点预设规则
    *
    * @default {
-   *   xs: "@media screen and (max-width: 575px)",
-   *   sm: "@media screen and (min-width: 576px) and (max-width: 767px)",
-   *   md: "@media screen and (min-width: 768px) and (max-width: 991px)",
-   *   lg: "@media screen and (min-width: 992px) and (max-width: 1199px)",
-   *   xl: "@media screen and (min-width: 1200px) and (max-width: 1399px)",
-   *   xxl: "@media screen and (min-width: 1400px)"
+   *   xs: "@media screen and (max-width: 480px)",
+   *   sm: "@media screen and (min-width: 768px)",
+   *   md: "@media screen and (min-width: 992px)",
+   *   lg: "@media screen and (min-width: 1200px)",
+   *   xl: "@media screen and (min-width: 1920px)",
    * }
    */
   mediaScreenRule?: Partial<MediaScreenRule>
