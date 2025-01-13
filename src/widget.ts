@@ -78,15 +78,15 @@ const StyledSimpleWidget = ({
   children,
   ...props
 }: StyledSimpleWidgetProps) => {
-  const only = true
-  const className = String(forCss)!
-  if (isRecordObject(css)) CssInJs.factory().define(css, { selector: className, only })
+  const className = String(forCss)
+  if (isRecordObject(css)) CssInJs.factory().define(css, { selector: className, readonly: true })
   if (isRecordObject(cssIn)) {
-    for (const screen of CssInJs.mediaScreenTags) {
-      if (screen in cssIn) {
+    const screens = Object.keys(cssIn) as Screen[]
+    for (const screen of screens) {
+      if (CssInJs.mediaScreenTags.includes(screen)) {
         const styleRule = cssIn[screen]
         if (isRecordObject(styleRule)) {
-          CssInJs.factory().define(styleRule, { selector: className, only, screen })
+          CssInJs.factory().define(styleRule, { selector: className, screen, readonly: true })
         }
       }
     }
@@ -115,7 +115,7 @@ export const Styled = new Proxy({} as HTMLWidgets, {
     if (typeof prop !== 'string') prop = 'div'
     return simple((props: any) => {
       props = Object.assign(props || {}, { tag: prop })
-      if (props?.forCss) {
+      if (typeof props.forCss === 'string' && props.forCss.trim().length) {
         return StyledSimpleWidget(Object.assign(props || {}, { tag: prop }))
       } else {
         return createElement(StyledWidget, props)
@@ -140,16 +140,23 @@ export class StyledWidget extends Widget<StyledProps> {
     if ('tag' in props && typeof props.tag !== 'string') {
       throw new TypeError(`StyledWidget: tag must be a string`)
     }
-    this.className = String(props.forCss) || CssInJs.factory().className()
+    let readonly = false
+    if (typeof props.forCss === 'string' && props.forCss.trim().length) {
+      this.className = props.forCss.trim()
+      readonly = true
+    } else {
+      this.className = CssInJs.factory().className()
+    }
     if (isRecordObject(props.css)) {
-      CssInJs.factory().define(props.css, { selector: this.className })
+      CssInJs.factory().define(props.css, { selector: this.className, readonly })
     }
     if (isRecordObject(props.cssIn)) {
-      for (const screen of CssInJs.mediaScreenTags) {
-        if (screen in props.cssIn) {
+      const screens = Object.keys(props.cssIn) as Screen[]
+      for (const screen of screens) {
+        if (CssInJs.mediaScreenTags.includes(screen)) {
           const styleRule = props.cssIn[screen]
           if (isRecordObject(styleRule)) {
-            CssInJs.factory().define(styleRule, { selector: this.className, screen })
+            CssInJs.factory().define(styleRule, { selector: this.className, screen, readonly })
           }
         }
       }
