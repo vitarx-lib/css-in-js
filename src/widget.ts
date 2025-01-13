@@ -18,7 +18,21 @@ export type MediaScreenCss = {
 }
 
 export type StyledProps<T extends HTMLTags = 'div'> = HTMLProps<T> & {
+  /**
+   * css样式，
+   *
+   * 与全局的`style`属性类似，但它不会添加到元素的style样式表中，
+   * 而是为其构造一条css规则，并把css的类名添加到`class`中。
+   */
   css?: CssStyle
+  /**
+   * 媒体查询的css样式
+   *
+   * 支持 `xs`：手机端样式, `sm`：小平板样式, `md`：大平板样式, `lg`：笔记本样式, `xl`：桌面显示器样式，五个断点预设。
+   *
+   * @example
+   * <Styled.div cssIn={{ xs: { fontSize: '20px' }, xl: { fontSize: '32px' } }}>
+   */
   cssIn?: MediaScreenCss
   /**
    * 唯一的`className`名称。
@@ -29,6 +43,8 @@ export type StyledProps<T extends HTMLTags = 'div'> = HTMLProps<T> & {
   /**
    * html元素标签
    *
+   * 如果你使用的是`Styled.div`组件集合，则无需传入，div就代表tag属性。
+   *
    * @default 'div'
    */
   tag?: T
@@ -38,6 +54,11 @@ export type StyledProps<T extends HTMLTags = 'div'> = HTMLProps<T> & {
  * html元素组件集合
  */
 type HTMLWidgets = {
+  /**
+   * HTML标准元素
+   *
+   * 额外的样式属性 {@linkcode StyledProps}
+   */
   [K in HTMLTags]: SimpleWidget<StyledProps<K>>
 } & {
   Widget: typeof StyledWidget
@@ -67,13 +88,18 @@ const StyledSimpleWidget = ({
       }
     }
   }
-  return createElement(tag || 'div', { 'v-bind': props, className, children })
+  tag = typeof tag === 'string' ? tag : 'div'
+  return createElement(tag, { 'v-bind': props, className, children })
 }
 // 标记为简单simple组件
 simple(StyledSimpleWidget)
 
 /**
  * 样式组件集合
+ *
+ * 支持所有 HTML 元素，另外支持 `Styled.Widget`强制使用`StyledWidget`类组件，它会让样式在组件销毁时删除样式。
+ *
+ * 如果给HTML元素传入`forCss="xxx"`则会直接使用{@linkcode StyledSimpleWidget}来优化性能，否则使用{@linkcode StyledWidget}类组件来管理样式，随生命周期销毁。
  *
  * @example
  * <Styled.div css={{ color: 'red' }}>Hello Vitarx CssInJs<Styled.div/>
@@ -100,13 +126,13 @@ export const Styled = new Proxy({} as HTMLWidgets, {
  *
  * 所有的样式都是跟随小部件生命周期的，小部件实例销毁时样式也随之销毁。
  */
-export class StyledWidget<T extends StyledProps = StyledProps> extends Widget<T> {
+export class StyledWidget extends Widget<StyledProps> {
   // 排除继承属性，其他属性都会被继承给根元素
   static readonly excludeInheritProps = ['tag', 'forCss', 'css', 'cssIn']
   // 样式类名
   public readonly className: string
 
-  constructor(props: T) {
+  constructor(props: StyledProps) {
     super(props)
     if ('tag' in props && typeof props.tag !== 'string') {
       throw new TypeError(`StyledWidget: tag must be a string`)
