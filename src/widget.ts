@@ -38,6 +38,9 @@ export type StyledProps<T extends HTMLTags = 'div'> = HTMLProps<T> & {
    * 唯一的`className`名称。
    *
    * 多个元素可以使用同一个`forCss`来使其共享同一组CSS样式规则。
+   *
+   * > 注意：如果使用了`forCss`来共享样式，样式相对来说是静态的，不会因为下一次重新定义而更新样式，
+   * 但它同样支持响应式样式规则的自动更新，只要你传入的css规则是响应式代理对象，则会在第一次定义该样式时开始监听变化自动更新样式。
    */
   forCss?: string
   /**
