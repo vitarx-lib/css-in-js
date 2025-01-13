@@ -2,9 +2,8 @@ import {
   CssInJs,
   type CssInJsOptions,
   type CssRuleOptions,
-  type CssStyle,
   type CssStyleMap,
-  type DynamicCssRule
+  type CssStyleRule
 } from './css-in-js.js'
 
 /**
@@ -12,25 +11,26 @@ import {
  *
  * @see {@linkcode CssInJs.define}
  */
-export function defineCssStyle(style: CssStyleMap, options?: CssRuleOptions): string {
+export function defineCssRule(style: CssStyleMap, options?: CssRuleOptions): CssStyleRule {
   return CssInJs.factory().define(style, options)
 }
+
 /**
- * 单例模式工厂方法(助手函数)
+ * 定义CSS样式(助手函数)
+ *
+ * @see {@linkcode CssInJs.defineNamed}
+ */
+export function defineCssRuleNamed(style: CssStyleMap, options?: CssRuleOptions): string {
+  return CssInJs.factory().defineNamed(style, options)
+}
+
+/**
+ * 工厂方法(助手函数)
  *
  * @see {@linkcode CssInJs.factory}
  */
 export function factory(options?: CssInJsOptions): CssInJs {
   return CssInJs.factory(options)
-}
-
-/**
- * 创建动态响应式CSS样式(助手函数)
- *
- * @see {@linkcode CssInJs.dynamic}
- */
-export function defineDynamicCssStyle(style: CssStyle, options?: CssRuleOptions): DynamicCssRule {
-  return CssInJs.factory().dynamic(style, options)
 }
 
 /**
