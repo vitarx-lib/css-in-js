@@ -343,15 +343,20 @@ export class CssInJs {
     if (isValueProxy(style)) style = style.value
     // 格式化完毕的样式
     const formatedStyles: Record<string, [string, string]> = {}
-
+    let newCssText = `rule.selectorText { `
     // 将 style 中的有效属性更新到 rule.style
     for (const property in style) {
       const value = formatStyleValue(style[property])
       if (value !== null) {
+        const key = formatStyleKey(property)
+        newCssText += `${key}: ${value}; `
         const newValue = removePriority(value)
         formatedStyles[formatStyleKey(property)] = [newValue, newValue === value ? '' : 'important']
       }
     }
+    newCssText += '}'
+    // 如果规则的样式文本没有变化，则不进行任何操作
+    if (rule.style.cssText === newCssText) return
 
     // 遍历 rule.style，处理删除和更新的逻辑
     for (let i = rule.style.length - 1; i >= 0; i--) {
@@ -435,8 +440,7 @@ export class CssInJs {
     const sheet = this.getCssStyleSheet(screen, isStaticCssRule ? 'readonly' : 'dynamic')
 
     // 插入规则并获取 CSSStyleRule
-    const rule = this.insertRule(sheet, style, selector, prefix)
-
+    const rule = this.insertRule(sheet, style, selector, prefix, isStaticCssRule)
     // 处理虚拟节点的规则映射，节点销毁自动删除节点样式
     if (vnode && !isStaticCssRule) this.handleVNodeCssRules(vnode, sheet, rule)
 
@@ -511,62 +515,113 @@ export class CssInJs {
    * @param {CssStyleMap} style - 样式对象
    * @param {string} selector - 选择器
    * @param {string} prefix - 前缀
+   * @param {boolean} cache - 是否缓存规则
    * @returns {CssStyleRule} - 返回`CssStyleRule`对象。
    */
   private insertRule(
     sheet: CSSStyleSheet,
     style: CssStyleMap,
     selector: string,
-    prefix: string
+    prefix: string,
+    cache: boolean
   ): CssStyleRule {
     const { name, selectorText } = this.parseSelector(selector, prefix)
     // 获取缓存的 CssStyleRule
-    const cachedCssRule = this.sheetCSSRuleMap.get(sheet)?.get(selectorText)
-    if (cachedCssRule) {
-      this.watchProxyStyleChange(cachedCssRule, style)
-      return cachedCssRule
+    if (cache) {
+      const cachedCssRule = this.sheetCSSRuleMap.get(sheet)?.get(selectorText)
+      if (cachedCssRule) {
+        this.updateCachedRule(cachedCssRule, style)
+        return cachedCssRule
+      }
     }
     // 生成规则文本
     const ruleText = cssStyleMapToCssRuleText(style, selectorText)
-    let index = 0
-    try {
-      // 写入规则
-      index = sheet.insertRule(ruleText, sheet.cssRules.length)
-    } catch (e) {
-      throw new Error(
-        `CssInJs.insertRule: 未能成功插入CSS规则，请检查样式是否存在错误，message-${e}`
-      )
-    }
-    const cssRule = sheet.cssRules[index] as CssStyleRule
-    if (!(cssRule instanceof CSSStyleRule)) {
-      throw new Error(`CssInJs.insertRule:${ruleText} 不是有效的CSSStyleRule`)
-    }
-    this.watchProxyStyleChange(cssRule, style)
-    Object.defineProperty(cssRule, 'name', {
-      value: name
-    })
-    Object.defineProperty(cssRule, 'className', {
-      value: name
-    })
-    Object.defineProperty(cssRule, 'toString', {
-      value() {
-        return name
-      },
-      configurable: true,
-      writable: true
-    })
+    // 添加规则到样式表
+    const cssRule = this.addRuleToSheet(sheet, ruleText)
+    // 缓存规则
+    if (cache) this.cacheCssRule(sheet, selectorText, cssRule)
+    // 监听代理对象变化
+    if (isProxy(style)) this.watchProxyStyleChange(cssRule, style)
+    // 扩展CSS规则属性
+    this.extendCssRule(cssRule, name)
     return cssRule
   }
-
+  /**
+   * 缓存CSS规则
+   *
+   * @param {CSSStyleSheet} sheet - 样式表
+   * @param {string} selectorText - 选择器文本
+   * @param {CssStyleRule} cssRule - CSS规则
+   */
+  private cacheCssRule(sheet: CSSStyleSheet, selectorText: string, cssRule: CssStyleRule): void {
+    if (!this.sheetCSSRuleMap.has(sheet)) {
+      this.sheetCSSRuleMap.set(sheet, new Map())
+    }
+    this.sheetCSSRuleMap.get(sheet)?.set(selectorText, cssRule)
+  }
+  /**
+   * 扩展CSS规则属性
+   *
+   * @param {CssStyleRule} cssRule - CSS规则
+   * @param {string} name - 规则名称
+   */
+  private extendCssRule(cssRule: CssStyleRule, name: string): void {
+    Object.defineProperties(cssRule, {
+      name: { value: name },
+      className: { value: name },
+      toString: {
+        value() {
+          return name
+        },
+        configurable: true,
+        writable: true
+      }
+    })
+  }
+  /**
+   * 将规则插入到样式表
+   *
+   * @param {CSSStyleSheet} sheet - 样式表
+   * @param {string} ruleText - 规则文本
+   * @returns {CssStyleRule} - 插入的CSS规则
+   */
+  private addRuleToSheet(sheet: CSSStyleSheet, ruleText: string): CssStyleRule {
+    let cssRule: CssStyleRule
+    try {
+      const index = sheet.insertRule(ruleText, sheet.cssRules.length)
+      cssRule = sheet.cssRules[index] as CssStyleRule
+    } catch (e) {
+      throw new Error(
+        `CssInJs.insertRule: 未能成功插入CSS规则，请检查样式是否存在错误，error：${e}`
+      )
+    }
+    if (!(cssRule instanceof CSSStyleRule)) {
+      throw new Error(`CssInJs.insertRule: ${ruleText} 不是有效的CSSStyleRule`)
+    }
+    return cssRule
+  }
+  /**
+   * 更新缓存规则样式
+   *
+   * @param {CssStyleRule} cssRule - 缓存的CSS规则
+   * @param {CssStyleMap} style - 样式对象
+   */
+  private updateCachedRule(cssRule: CssStyleRule, style: CssStyleMap): void {
+    if (isProxy(style)) {
+      this.watchProxyStyleChange(cssRule, style)
+    } else {
+      CssInJs.replaceRuleStyle(cssRule, style)
+    }
+  }
   /**
    * 监听代理样式变化
    *
-   * @param rule
-   * @param style
+   * @param rule - CSSStyleRule
+   * @param style - 样式对象
    * @private
    */
   private watchProxyStyleChange(rule: CssStyleRule, style: CssStyleMap) {
-    if (isProxy(style) && !rule.hasOwnProperty('listener')) {
+    if (!rule.hasOwnProperty('listener')) {
       const listener = watch(style, () => CssInJs.replaceRuleStyle(rule, style))
       Object.defineProperty(rule, 'listener', {
         value: listener,
@@ -575,7 +630,6 @@ export class CssInJs {
       listener.onDestroyed(() => delete rule.listener)
     }
   }
-
   /**
    * 处理虚拟节点的样式规则映射
    *
@@ -607,7 +661,6 @@ export class CssInJs {
       this.vnodeCssRuleMap.delete(vnode)
     })
   }
-
   /**
    * 获取CSS样式表
    *
@@ -629,7 +682,6 @@ export class CssInJs {
     }
     return this.sheet[type]
   }
-
   /**
    * 解析选择器
    *
