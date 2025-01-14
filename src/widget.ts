@@ -13,8 +13,8 @@ export type HTMLTags = keyof JSX.IntrinsicElements
 // html标签的属性
 export type HTMLProps<T extends HTMLTags> = JSX.IntrinsicElements[T]
 // 媒体查询的css样式
-export type MediaScreenCss = {
-  [key in Screen]?: CssStyle
+export type MediaScreenCss<T = CssStyle> = {
+  [key in Screen]?: T
 }
 
 export type StyledProps<T extends HTMLTags = 'div'> = HTMLProps<T> & {
