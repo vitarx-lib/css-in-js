@@ -137,7 +137,7 @@ export class StyledWidget extends Widget<StyledProps> {
       this.className = props.forCss.trim()
       readonly = true
     } else {
-      this.className = CssInJs.factory().className()
+      this.className = CssInJs.factory({ prefix: 'styled-' }).className()
     }
     defineStyles(props.css, props.cssIn, this.className, readonly)
   }
