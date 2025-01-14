@@ -155,3 +155,13 @@ export function formatSelector(selector: string): string {
   }
   return selector
 }
+
+/**
+ * 判断是否是有效的类名
+ *
+ * @param {any} value - 要判断的值
+ * @returns {boolean} - 返回一个布尔值，表示是否是有效的类名。
+ */
+export function isValidName(value: any): value is string {
+  return typeof value === 'string' && value.trim().length > 0
+}
