@@ -71,11 +71,7 @@ export function createUUIDGenerator(initialLength: number = 2): () => string {
 export function isCSSStyleSheetSupported(): boolean {
   try {
     // 检查浏览器是否支持 CSSStyleSheet 构造函数
-    return (
-      'CSSStyleSheet' in window &&
-      'adoptedStyleSheets' in document &&
-      typeof CSSStyleSheet.prototype.replaceSync === 'function'
-    )
+    return 'CSSStyleSheet' in window && 'adoptedStyleSheets' in document
   } catch (e) {
     return false
   }
