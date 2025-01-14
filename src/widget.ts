@@ -7,6 +7,7 @@ import {
   Widget
 } from 'vitarx'
 import { CssInJs, type CssStyle, type Screen } from './css-in-js.js'
+import { isValidName } from './utils.js'
 
 // html标签
 export type HTMLTags = keyof JSX.IntrinsicElements
@@ -69,33 +70,90 @@ type HTMLWidgets = {
 
 type StyledSimpleWidgetProps<T extends HTMLTags = HTMLTags> = MakeRequired<StyledProps<T>, 'forCss'>
 
-// 样式组件
-const StyledSimpleWidget = ({
-  tag,
-  css,
-  forCss,
-  cssIn,
-  children,
-  ...props
-}: StyledSimpleWidgetProps) => {
-  const className = String(forCss)
-  if (isRecordObject(css)) CssInJs.factory().define(css, { selector: className, readonly: true })
+/**
+ * 定义样式
+ *
+ * @param css
+ * @param cssIn
+ * @param className
+ * @param readonly
+ */
+function defineStyles(
+  css: StyledProps['css'],
+  cssIn: StyledProps['cssIn'],
+  className: string,
+  readonly = false
+): void {
+  const cssInJs = CssInJs.factory({ prefix: 'styled-' })
+  if (isRecordObject(css)) {
+    cssInJs.define(css, { selector: className, readonly })
+  }
   if (isRecordObject(cssIn)) {
     const screens = Object.keys(cssIn) as Screen[]
     for (const screen of screens) {
       if (CssInJs.mediaScreenTags.includes(screen)) {
         const styleRule = cssIn[screen]
         if (isRecordObject(styleRule)) {
-          CssInJs.factory().define(styleRule, { selector: className, screen, readonly: true })
+          cssInJs.define(styleRule, { selector: className, screen, readonly })
         }
       }
     }
   }
-  tag = typeof tag === 'string' ? tag : 'div'
-  return createElement(tag, { 'v-bind': props, className, children })
 }
-// 标记为简单simple组件
-simple(StyledSimpleWidget)
+
+/**
+ * 无状态样式组件，forCss必填！
+ *
+ * 使用简单组件定义，优化性能，减少内存占用。
+ */
+export const StyledSimpleWidget = simple(
+  ({ tag, css, forCss, cssIn, children, ...props }: StyledSimpleWidgetProps) => {
+    defineStyles(css, cssIn, forCss, true)
+    tag = typeof tag === 'string' ? tag : 'div'
+    return createElement(tag, { 'v-bind': props, forCss, children })
+  }
+)
+
+/**
+ * 样式小部件
+ *
+ * 所有的样式都是跟随小部件生命周期的，小部件实例销毁时样式也随之销毁。
+ */
+export class StyledWidget extends Widget<StyledProps> {
+  // 排除继承属性，其他属性都会被继承给根元素
+  static readonly excludeInheritProps = ['tag', 'forCss', 'css', 'cssIn']
+  // 样式类名
+  public readonly className: string
+
+  constructor(props: StyledProps) {
+    super(props)
+
+    if ('tag' in props && typeof props.tag !== 'string') {
+      throw new TypeError(`StyledWidget: tag must be a string`)
+    }
+
+    let readonly = false
+    if (typeof props.forCss === 'string' && props.forCss.trim().length) {
+      this.className = props.forCss.trim()
+      readonly = true
+    } else {
+      this.className = CssInJs.factory().className()
+    }
+    defineStyles(props.css, props.cssIn, this.className, readonly)
+  }
+
+  get tag(): HTMLTags {
+    return this.props.tag || 'div'
+  }
+
+  protected build(): Element {
+    return createElement(this.tag, {
+      className: this.className,
+      children: this.children,
+      'v-bind': [this.props, StyledWidget.excludeInheritProps]
+    })
+  }
+}
 
 /**
  * 样式组件集合
@@ -113,65 +171,13 @@ export const Styled = new Proxy({} as HTMLWidgets, {
   get(_target, prop: string) {
     if (prop === 'Widget') return StyledWidget
     if (typeof prop !== 'string') prop = 'div'
-    return simple((props: any) => {
-      props = Object.assign(props || {}, { tag: prop })
-      if (typeof props.forCss === 'string' && props.forCss.trim().length) {
-        return StyledSimpleWidget(Object.assign(props || {}, { tag: prop }))
+    return simple((props: Omit<StyledProps, 'tag'>) => {
+      props = Object.assign(props, { tag: prop })
+      if (isValidName(props.forCss)) {
+        return StyledSimpleWidget(props as StyledSimpleWidgetProps)
       } else {
         return createElement(StyledWidget, props)
       }
     })
   }
 })
-
-/**
- * 样式小部件
- *
- * 所有的样式都是跟随小部件生命周期的，小部件实例销毁时样式也随之销毁。
- */
-export class StyledWidget extends Widget<StyledProps> {
-  // 排除继承属性，其他属性都会被继承给根元素
-  static readonly excludeInheritProps = ['tag', 'forCss', 'css', 'cssIn']
-  // 样式类名
-  public readonly className: string
-
-  constructor(props: StyledProps) {
-    super(props)
-    if ('tag' in props && typeof props.tag !== 'string') {
-      throw new TypeError(`StyledWidget: tag must be a string`)
-    }
-    let readonly = false
-    if (typeof props.forCss === 'string' && props.forCss.trim().length) {
-      this.className = props.forCss.trim()
-      readonly = true
-    } else {
-      this.className = CssInJs.factory().className()
-    }
-    if (isRecordObject(props.css)) {
-      CssInJs.factory().define(props.css, { selector: this.className, readonly })
-    }
-    if (isRecordObject(props.cssIn)) {
-      const screens = Object.keys(props.cssIn) as Screen[]
-      for (const screen of screens) {
-        if (CssInJs.mediaScreenTags.includes(screen)) {
-          const styleRule = props.cssIn[screen]
-          if (isRecordObject(styleRule)) {
-            CssInJs.factory().define(styleRule, { selector: this.className, screen, readonly })
-          }
-        }
-      }
-    }
-  }
-
-  get tag(): HTMLTags {
-    return this.props.tag || 'div'
-  }
-
-  protected build(): Element {
-    return createElement(this.tag, {
-      className: this.className,
-      children: this.children,
-      'v-bind': [this.props, StyledWidget.excludeInheritProps]
-    })
-  }
-}
