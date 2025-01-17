@@ -110,7 +110,7 @@ export const StyledSimpleWidget = simple(
   ({ tag, css, forCss, cssIn, children, ...props }: StyledSimpleWidgetProps) => {
     defineStyles(css, cssIn, forCss, true)
     tag = typeof tag === 'string' ? tag : 'div'
-    return createElement(tag, { 'v-bind': props, forCss, children })
+    return createElement(tag, { 'v-bind': props, className: forCss, children })
   }
 )
 
