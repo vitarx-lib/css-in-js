@@ -25,6 +25,19 @@ export function defineCssRuleNamed(style: CssStyleMap, options?: CssRuleOptions)
 }
 
 /**
+ * 定义自定义选择器规则（助手函数）
+ *
+ * @see {@linkcode CssInJs.defineCustomRule}
+ */
+export function defineCustomRule(
+  selector: string,
+  style: CssStyleMap,
+  options: Omit<CssRuleOptions, 'selector'> = {}
+): CssStyleRule {
+  return CssInJs.factory().defineCustomRule(selector, style, options)
+}
+
+/**
  * 工厂方法(助手函数)
  *
  * @see {@linkcode CssInJs.factory}
