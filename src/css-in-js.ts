@@ -462,6 +462,22 @@ export class CssInJs {
   }
 
   /**
+   * 定义自定义选择器规则
+   *
+   * @param {string} selector - 选择器
+   * @param {CssStyleMap} style - 样式对象
+   * @param {CssRuleOptions} options - 可选配置项
+   * @returns {CssStyleRule} - 返回`CssStyleRule`对象
+   */
+  public defineCustomRule(
+    selector: string,
+    style: CssStyleMap,
+    options: Omit<CssRuleOptions, 'selector'> = {}
+  ): CssStyleRule {
+    return this.define(style, { selector, ...options })
+  }
+
+  /**
    * 删除规则
    *
    * @param {CSSStyleSheet} sheet - 样式表
