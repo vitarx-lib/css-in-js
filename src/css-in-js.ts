@@ -261,7 +261,7 @@ export class CssInJs {
   private readonly sheet: CSSSheetStore
   // 配置项
   private readonly options: DeepRequired<CssInJsOptions> = {
-    prefix: '',
+    prefix: 'css-',
     mediaScreenRule: {
       xs: `@media screen and (max-width: 480px)`,
       sm: `@media screen and (min-width: 768px)`,
