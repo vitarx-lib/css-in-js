@@ -4,12 +4,11 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "skipLibCheck": true,
+    "outDir": "dist",
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
     /* Linting */
     "strict": true,
     "noUnusedLocals": false,
@@ -17,8 +16,9 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     /* Vitarx Support*/
-    "types": ["vitarx/dist/index.d.ts"],
-    "rootDir": "src"
+    "types": ["vitarx"],
+    "rootDir": "src",
+    "declaration": true
   },
   "include": ["src"],
   "exclude": ["node_modules"]
