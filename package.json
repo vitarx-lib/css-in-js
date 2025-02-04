@@ -1,7 +1,7 @@
 {
   "name": "@vitarx/css-in-js",
   "private": false,
-  "version": "1.0.0-beta.12",
+  "version": "1.0.0-beta.13",
   "description": "这是一个为Vitarx框架量身打造的CssInJs库，用于在 JS 中创建 CSS",
   "author": "ZhuChongLin <8210856@qq.com>",
   "keywords": ["css-in-js","@vitarx/css-in-js"],
@@ -18,12 +18,11 @@
     "push": "npm publish --access=public"
   },
   "peerDependencies": {
-    "vitarx": "^1.0.0-beta.35"
+    "vitarx": "^1.0.0-beta.36"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
-    "typescript": "^5.7.2",
-    "vite-plugin-dts": "^4.4.0"
+    "typescript": "^5.7.2"
   },
   "files": [
     "dist",
