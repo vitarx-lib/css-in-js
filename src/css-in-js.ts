@@ -381,9 +381,8 @@ export class CssInJs {
    * 创建一个样式表
    *
    * @returns {CSSStyleSheet} - CSSStyleSheet。
-   * @private
    */
-  private static createStyleSheet(): CSSStyleSheet {
+  public static createStyleSheet(): CSSStyleSheet {
     let cssSheet: CSSStyleSheet
     if (isCSSStyleSheetSupported()) {
       cssSheet = new CSSStyleSheet()
