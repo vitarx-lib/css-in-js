@@ -22,7 +22,7 @@ npm install @vitarx/css-in-js
 ### 基本用法
 
 ```jsx
-import CssInJs from '@vitarx/css-in-js'
+import { CssInJs } from '@vitarx/css-in-js'
 
 // 实例化 CssInJs
 const cssInJs = new CssInJs('my-')
