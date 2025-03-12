@@ -58,8 +58,8 @@ const Button = () => {
 ### 样式同步更改
 ```js
 const Button = () => {
-  // 用relative创建一个响应式对象
-  const style = relative<CssStyle>({ color: 'red'})
+  // 用reactive创建一个响应式对象
+  const style = reactive<CssStyle>({ color: 'red'})
   const className = cssInJs.defineNamed(style) // defineNamed和defin方法一样，只是返回值不同，返回的是name
   const switchColor = () => {
     // 更改响应式对象属性，会自动更新样式
