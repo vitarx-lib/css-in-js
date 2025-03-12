@@ -6,7 +6,7 @@ import {
   type SimpleWidget,
   Widget
 } from 'vitarx'
-import { CssInJs, type CssStyle, type Screen } from './css-in-js.js'
+import CssInJs, { type CssStyle, type Screen } from './css-in-js.js'
 import { isValidName } from './utils.js'
 
 // html标签
@@ -84,7 +84,7 @@ function defineStyles(
   className: string,
   readonly = false
 ): void {
-  const cssInJs = CssInJs.factory({ prefix: 'styled-' })
+  const cssInJs = CssInJs.instance({ prefix: 'styled-' })
   if (isRecordObject(css)) {
     cssInJs.define(css, { selector: className, readonly })
   }
@@ -137,7 +137,7 @@ export class StyledWidget extends Widget<StyledProps> {
       this.className = props.forCss.trim()
       readonly = true
     } else {
-      this.className = CssInJs.factory({ prefix: 'styled-' }).className()
+      this.className = CssInJs.instance({ prefix: 'styled-' }).className()
     }
     defineStyles(props.css, props.cssIn, this.className, readonly)
   }
