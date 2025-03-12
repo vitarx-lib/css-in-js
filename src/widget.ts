@@ -6,7 +6,7 @@ import {
   type SimpleWidget,
   Widget
 } from 'vitarx'
-import CssInJs, { type CssStyle, type Screen } from './css-in-js.js'
+import { CssInJs, type CssStyle, type Screen } from './css-in-js.js'
 import { isValidName } from './utils.js'
 
 // html标签

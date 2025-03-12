@@ -1,4 +1,4 @@
-import CssInJs, { type CssRuleOptions, type CssStyleMap, type CssStyleRule } from './css-in-js.js'
+import { CssInJs, type CssRuleOptions, type CssStyleMap, type CssStyleRule } from './css-in-js.js'
 
 /**
  * 定义CSS样式(助手函数)
