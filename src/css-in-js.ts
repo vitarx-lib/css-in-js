@@ -244,7 +244,7 @@ export type CSSSheetStore = {
  * }
  * ```
  */
-export default class CssInJs {
+export class CssInJs {
   // 随机生成id
   static readonly uuidGenerator: () => string = createUUIDGenerator(3)
   /**
