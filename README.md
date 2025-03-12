@@ -241,9 +241,9 @@ interface CssRuleOptions {
 
 ## API
 ### 静态方法
-
-- `instance(options?: CssInJsOption):CssInJs` 用于访问&初始化单例。
+- `create(options?: CssInJsOptions):CssInJs` 创建单实例。
     1. `options`：和构造函数的参数一致，用于初始化单例。
+- `get instance():CssInJs` 获取单实例，没有创建会自动创建。
 - `makeClassName(prefix: string = ''): string` 生成唯一类名。
     1. `prefix`：类名前缀。
 - `uuidGenerator(): string` 生成唯一id。

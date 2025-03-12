@@ -296,6 +296,20 @@ export default class CssInJs {
   }
 
   /**
+   * 获取单实例
+   *
+   * 如果不存在，则创建一个新的实例并返回
+   *
+   * @returns {CssInJs} 返回CssInJs实例
+   */
+  static get instance(): CssInJs {
+    // 如果实例不存在，则创建一个新的实例并返回
+    if (!this.#instance) this.#instance = new CssInJs()
+    // 返回单例实例
+    return this.#instance
+  }
+
+  /**
    * 全局配置的css前缀
    */
   public get prefix(): string {
@@ -319,21 +333,6 @@ export default class CssInJs {
    */
   public static makeClassName(prefix: string = ''): string {
     return prefix + CssInJs.uuidGenerator()
-  }
-
-  /**
-   * 获取或创建单实例
-   *
-   * 如果已经存在单实例，则直接返回该实例
-   *
-   * @param {CssInJsOptions} [options] - 可选配置项，仅在第一次调用此方法时有效。
-   * @returns {CssInJs} 返回CssInJs实例
-   */
-  static instance(options?: CssInJsOptions): CssInJs {
-    // 如果实例不存在，则创建一个新的实例并返回
-    if (!this.#instance) this.#instance = new CssInJs(options)
-    // 返回单例实例
-    return this.#instance
   }
 
   /**
@@ -400,6 +399,19 @@ export default class CssInJs {
       cssSheet = style.sheet!
     }
     return cssSheet
+  }
+
+  /**
+   * 创建单例
+   *
+   * @param options - 可选配置项
+   * @returns {CssInJs} - 返回单例实例
+   */
+  static create(options?: CssInJsOptions): CssInJs {
+    if (!this.#instance) {
+      this.#instance = new CssInJs(options)
+    }
+    return this.#instance
   }
 
   /**
