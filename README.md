@@ -8,14 +8,17 @@
 ```shell
 npm install @vitarx/css-in-js
 ```
+
 ## 特性
+
 - 动态样式管理：根据组件生命周期自动删除样式。
-- 响应式支持：内建的媒体查询，支持不同屏幕尺寸的样式。
+- 响应式支持：内建媒介查询，支持不同屏幕尺寸的样式。
 - 强大的选择器支持：支持自定义 CSS 选择器，兼容复杂的选择器类型。
 - 全局与局部样式支持：可定义全局样式或与组件生命周期绑定的局部样式。
-- 样式同步更改：支持使用`vitarx.Ref`、`vitarx.Computed`、`vitarx.Reactive`等响应式对象定义样式，修改对象属性会自动更新样式。
+- 样式同步更改：支持使用`vitarx.Ref`、`vitarx.Computed`、`vitarx.Reactive` 等响应式对象定义样式，修改对象属性会自动更新样式。
 
 ## 示例
+
 ### 基本用法
 ```jsx
 import CssInJs from '@vitarx/css-in-js'
@@ -80,22 +83,6 @@ cssInJs.define({ fontSize: '12px' }, {
 })
 ```
 
-### 性能优化
-```jsx
-const Card = () => {
-  // 使用 selector 配置选择器，使其不重复创建样式。
-  const rule = cssInJs.define({width:'100px', height:'100px'},{selector:'.my-card'})
-  return <div class={rule.name}>卡片</div>
-}
-const App = () => {
-  return (
-    <div>{
-      Array(100).fill(null).map(()=>(<Card />))
-    }</div>
-  )
-}
-```
-
 ### Styled小部件
 
 ```tsx
@@ -109,6 +96,22 @@ const Button = () => {
     <Styled.button class="youer-button-css" css={style} cssIn={{xs:phoneStyle}} onClick={()=>console.log('按钮被点击了')}>
       按钮
     </Styled.button>
+  )
+}
+```
+
+## 性能优化
+```jsx
+const Card = () => {
+  // 使用 selector 配置选择器，使其不重复创建样式。
+  const rule = cssInJs.define({width:'100px', height:'100px'},{selector:'.my-card'})
+  return <div class={rule.name}>卡片</div>
+}
+const App = () => {
+  return (
+    <div>{
+      Array(100).fill(null).map(()=>(<Card />))
+    }</div>
   )
 }
 ```
@@ -209,7 +212,7 @@ interface CssRuleOptions {
     *
     * @default undefined
     */
-   screen?: Screen
+   screen?: keyof MediaScreenRule
    /**
     * 是否只读
     *
@@ -225,13 +228,12 @@ interface CssRuleOptions {
     */
    readonly?: boolean
 }
-/** 屏幕尺寸 */
-export type Screen = keyof MediaScreenRule
 ```
 
 ## API
 ### 静态方法
-- `factory(options?: CssInJsOption):CssInJs` 门面方法，用于访问&初始化单例。
+
+- `instance(options?: CssInJsOption):CssInJs` 用于访问&初始化单例。
     1. `options`：和构造函数的参数一致，用于初始化单例。
 - `makeClassName(prefix: string = ''): string` 生成唯一类名。
     1. `prefix`：类名前缀。
@@ -239,9 +241,10 @@ export type Screen = keyof MediaScreenRule
 - `replaceRuleStyle(rule: CssStyleRule, style: CssStyleMap): void` 更新规则样式
     1. `rule`：define方法返回的规则。
     2. `style`: 样式对象
-- `get mediaScreenTags()：Screen[]` 获取所有媒体查询断点标签。
+- `get mediaScreenTags()：keyof MediaScreenRule[]` 获取所有媒体查询断点标签。
 
 ### 动态方法/属性
+
 - `define(style: CssStyle, options?: CssRuleOptions):CssStyleRule` 定义样式，返回样式规则。
    1. `style`：样式对象，支持响应式对象、计算属性、ref值代理对象。
    2. `options`：样式规则配置，支持选择器、前缀、适配屏幕、是否只读等配置。
@@ -252,9 +255,9 @@ export type Screen = keyof MediaScreenRule
 
 
 ## 助手函数
-- `defineCssRule`: 定义样式规则，返回样式规则。
-- `defineCssRuleNamed`: 定义样式规则，返回样式规则类名。
-- `factory`：门面方法，用于访问&初始化单例。
+- `defineCssRule`: 定义样式规则，返回`CssStyleRule`。
+- `defineNamed`: 定义样式规则，返回样式规则类名。
+- `defineCustomRule`: 定义自定义选择器规则，返回`CssStyleRule`。
 - `makeClassName`：生成唯一类名。
 
 ## CssStyleRule对象接口声明
