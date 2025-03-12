@@ -244,7 +244,7 @@ export type CSSSheetStore = {
  * }
  * ```
  */
-export class CssInJs {
+export default class CssInJs {
   // 随机生成id
   static readonly uuidGenerator: () => string = createUUIDGenerator(3)
   /**
@@ -256,7 +256,7 @@ export class CssInJs {
    *
    * @private
    */
-  private static instance: CssInJs | null = null
+  static #instance: CssInJs | null = null
   // 样式表
   private readonly sheet: CSSSheetStore
   // 配置项
@@ -295,7 +295,9 @@ export class CssInJs {
     }
   }
 
-  // 前缀
+  /**
+   * 全局配置的css前缀
+   */
   public get prefix(): string {
     return this.options.prefix
   }
@@ -320,16 +322,18 @@ export class CssInJs {
   }
 
   /**
-   * 单例模式工厂方法
+   * 获取或创建单实例
+   *
+   * 如果已经存在单实例，则直接返回该实例
    *
    * @param {CssInJsOptions} [options] - 可选配置项，仅在第一次调用此方法时有效。
    * @returns {CssInJs} 返回CssInJs实例
    */
-  static factory(options?: CssInJsOptions): CssInJs {
+  static instance(options?: CssInJsOptions): CssInJs {
     // 如果实例不存在，则创建一个新的实例并返回
-    if (!this.instance) this.instance = new CssInJs(options)
+    if (!this.#instance) this.#instance = new CssInJs(options)
     // 返回单例实例
-    return this.instance
+    return this.#instance
   }
 
   /**
@@ -424,7 +428,7 @@ export class CssInJs {
    */
   public define(style: CssStyleMap, options: CssRuleOptions = {}): CssStyleRule {
     if (!isRecordObject(options)) {
-      throw new TypeError(`CssInJs.define:options must be a object`)
+      throw new TypeError(`CssInJs.define: options must be a object`)
     }
 
     const { selector = '', screen = '', prefix = '', readonly } = options
