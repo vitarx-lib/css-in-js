@@ -6,7 +6,7 @@ import CssInJs, { type CssRuleOptions, type CssStyleMap, type CssStyleRule } fro
  * @see {@linkcode CssInJs.define}
  */
 export function defineCssRule(style: CssStyleMap, options?: CssRuleOptions): CssStyleRule {
-  return CssInJs.instance().define(style, options)
+  return CssInJs.instance.define(style, options)
 }
 
 /**
@@ -15,7 +15,7 @@ export function defineCssRule(style: CssStyleMap, options?: CssRuleOptions): Css
  * @see {@linkcode CssInJs.defineNamed}
  */
 export function defineNamed(style: CssStyleMap, options?: CssRuleOptions): string {
-  return CssInJs.instance().defineNamed(style, options)
+  return CssInJs.instance.defineNamed(style, options)
 }
 
 /**
@@ -28,7 +28,7 @@ export function defineCustomRule(
   style: CssStyleMap,
   options: Omit<CssRuleOptions, 'selector'> = {}
 ): CssStyleRule {
-  return CssInJs.instance().defineCustomRule(selector, style, options)
+  return CssInJs.instance.defineCustomRule(selector, style, options)
 }
 
 /**

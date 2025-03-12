@@ -84,7 +84,7 @@ function defineStyles(
   className: string,
   readonly = false
 ): void {
-  const cssInJs = CssInJs.instance({ prefix: 'styled-' })
+  const cssInJs = CssInJs.create({ prefix: 'styled-' })
   if (isRecordObject(css)) {
     cssInJs.define(css, { selector: className, readonly })
   }
@@ -137,7 +137,7 @@ export class StyledWidget extends Widget<StyledProps> {
       this.className = props.forCss.trim()
       readonly = true
     } else {
-      this.className = CssInJs.instance({ prefix: 'styled-' }).className()
+      this.className = CssInJs.create({ prefix: 'styled-' }).className()
     }
     defineStyles(props.css, props.cssIn, this.className, readonly)
   }
