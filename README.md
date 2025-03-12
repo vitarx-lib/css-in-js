@@ -20,6 +20,7 @@ npm install @vitarx/css-in-js
 ## 示例
 
 ### 基本用法
+
 ```jsx
 import CssInJs from '@vitarx/css-in-js'
 
@@ -35,6 +36,7 @@ const App = () => {
 ```
 
 ### 动态切换样式
+
 ```jsx
 const Button = () => {
   // 组件销毁时会自动移除该样式
@@ -56,6 +58,9 @@ const Button = () => {
 ```
 
 ### 样式同步更改
+
+使用响应式对象样式，当响应式对象变化时，样式也会随之变化，仅单向同步，并非双向同步！
+
 ```js
 const Button = () => {
   // 用reactive创建一个响应式对象
@@ -83,7 +88,11 @@ cssInJs.define({ fontSize: '12px' }, {
 })
 ```
 
-### Styled小部件
+## Styled小部件
+
+内置了Styled小部件，可以更方便的使用css-in-js库
+
+它能够直接将内联的css样式构造成css类
 
 ```tsx
 import { type CssStyle, Styled} from '@vitarx/css-in-js'
