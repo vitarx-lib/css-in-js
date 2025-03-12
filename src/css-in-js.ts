@@ -347,7 +347,7 @@ export default class CssInJs {
     if (isValueProxy(style)) style = style.value
     // 格式化完毕的样式
     const formatedStyles: Record<string, [string, string]> = {}
-    let newCssText = `rule.selectorText { `
+    let newCssText = `${rule.selectorText} { `
     // 将 style 中的有效属性更新到 rule.style
     for (const property in style) {
       const value = formatStyleValue(style[property])
