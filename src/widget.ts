@@ -1,8 +1,9 @@
 import {
   createElement,
+  defineSimpleWidget,
   type Element,
   isRecordObject,
-  simple,
+  type MakeRequired,
   type SimpleWidget,
   Widget
 } from 'vitarx'
@@ -106,7 +107,7 @@ function defineStyles(
  *
  * 使用简单组件定义，优化性能，减少内存占用。
  */
-export const StyledSimpleWidget = simple(
+export const StyledSimpleWidget = defineSimpleWidget(
   ({ tag, css, forCss, cssIn, children, ...props }: StyledSimpleWidgetProps) => {
     defineStyles(css, cssIn, forCss, true)
     tag = typeof tag === 'string' ? tag : 'div'
@@ -146,7 +147,7 @@ export class StyledWidget extends Widget<StyledProps> {
     return this.props.tag || 'div'
   }
 
-  protected build(): Element {
+  build(): Element {
     return createElement(this.tag, {
       className: this.className,
       children: this.children,
@@ -171,7 +172,7 @@ export const Styled = new Proxy({} as HTMLWidgets, {
   get(_target, prop: string) {
     if (prop === 'Widget') return StyledWidget
     if (typeof prop !== 'string') prop = 'div'
-    return simple((props: Omit<StyledProps, 'tag'>) => {
+    return defineSimpleWidget((props: Omit<StyledProps, 'tag'>) => {
       props = Object.assign(props, { tag: prop })
       if (isValidName(props.forCss)) {
         return StyledSimpleWidget(props as StyledSimpleWidgetProps)
