@@ -11,14 +11,14 @@
     "moduleDetection": "force",
     /* Linting */
     "strict": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     /* Vitarx Support*/
     "types": ["vitarx"],
     "rootDir": "src",
-    "declaration": true,
+    "declaration": false,
     "noEmit": true
   },
   "include": ["src"],
