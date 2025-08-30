@@ -1,15 +1,16 @@
 import {
   deepMergeObject,
+  type DeepRequired,
   getCurrentVNode,
   isProxy,
   isRecordObject,
-  isValueProxy,
-  Listener,
-  type Reactive,
-  type ValueProxy,
+  isRefSignal,
+  type ProxySignal,
+  type RefSignal,
+  type Subscriber,
   type VNode,
-  VNodeManager,
-  watch
+  watch,
+  type WidgetVNode
 } from 'vitarx'
 import {
   createUUIDGenerator,
@@ -54,7 +55,7 @@ export interface CssStyleRule extends CSSStyleRule {
    * 如果它是在组件作用域内时，组件销毁会自动取消监听，移除该监听器，但不在组件作用域中时，该监听器会一直存在，
    * 需手动`listener?.destroy()`
    */
-  listener?: Listener
+  listener?: Subscriber
   /**
    * 转换为字符串
    *
@@ -130,7 +131,7 @@ export interface CssInJsOptions {
   mediaScreenRule?: Partial<MediaScreenRule>
 }
 
-export type CssStyleMap = CssStyle | Reactive<CssStyle> | ValueProxy<CssStyle>
+export type CssStyleMap = CssStyle | ProxySignal<CssStyle> | RefSignal<CssStyle>
 
 export interface CssRuleOptions {
   /**
@@ -343,7 +344,7 @@ export class CssInJs {
    * @private
    */
   public static replaceRuleStyle(rule: CssStyleRule, style: CssStyleMap): void {
-    if (isValueProxy(style)) style = style.value
+    if (isRefSignal(style)) style = style.value
     // 格式化完毕的样式
     const formatedStyles: Record<string, [string, string]> = {}
     let newCssText = `${rule.selectorText} { `
@@ -658,7 +659,7 @@ export class CssInJs {
         value: listener,
         configurable: true // 允许删除
       })
-      listener.onDestroyed(() => delete rule.listener)
+      listener.onDispose(() => delete rule.listener)
     }
   }
   /**
@@ -668,7 +669,7 @@ export class CssInJs {
    * @param sheet - 当前样式表
    * @param rule - 当前CSS规则
    */
-  private handleVNodeCssRules(vnode: VNode, sheet: CSSStyleSheet, rule: CssStyleRule) {
+  private handleVNodeCssRules(vnode: WidgetVNode, sheet: CSSStyleSheet, rule: CssStyleRule) {
     if (!this.vnodeCssRuleMap.has(vnode)) {
       const vnodeRuleMap = new Map([[sheet, new Set([rule.selectorText])]])
       this.vnodeCssRuleMap.set(vnode, vnodeRuleMap)
@@ -680,7 +681,7 @@ export class CssInJs {
         vnodeRuleMap.set(sheet, new Set([rule.selectorText]))
       }
     }
-    VNodeManager.onDestroyed(vnode, () => {
+    vnode.scope.onDispose(() => {
       const vnodeRuleMap = this.vnodeCssRuleMap.get(vnode)
       if (vnodeRuleMap) {
         vnodeRuleMap.forEach((selectors, table) => {
