@@ -1,4 +1,4 @@
-import { isNumber, isRecordObject, isString, isValueProxy } from 'vitarx'
+import { isNumber, isRecordObject, isRefSignal, isString } from 'vitarx'
 import { type CssStyleMap } from './css-in-js.js'
 
 /**
@@ -118,7 +118,7 @@ export function formatStyleKey(key: string): string {
  * @private
  */
 export function cssStyleMapToCssRuleText(cssStyleMap: CssStyleMap, selectorText: string): string {
-  if (isValueProxy(cssStyleMap)) cssStyleMap = cssStyleMap.value
+  if (isRefSignal(cssStyleMap)) cssStyleMap = cssStyleMap.value
   if (!isRecordObject(cssStyleMap)) throw new TypeError(`CssInJs:style must be a record object`)
 
   const rule = Object.entries(cssStyleMap)
