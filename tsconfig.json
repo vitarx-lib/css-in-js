@@ -18,7 +18,8 @@
     /* Vitarx Support*/
     "types": ["vitarx"],
     "rootDir": "src",
-    "declaration": true
+    "declaration": true,
+    "noEmit": true
   },
   "include": ["src"],
   "exclude": ["node_modules"]
