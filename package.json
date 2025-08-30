@@ -1,36 +1,44 @@
 {
   "name": "@vitarx/css-in-js",
   "private": false,
-  "version": "1.1.0",
+  "version": "3.0.0-beta.1",
   "description": "这是一个为Vitarx框架量身打造的CssInJs库，用于在 JS 中创建 CSS",
   "author": "ZhuChongLin <8210856@qq.com>",
+  "license": "MIT",
   "keywords": [
     "css-in-js",
     "@vitarx/css-in-js"
   ],
-  "main": "./dist/css-in-js.umd.js",
-  "module": "./dist/index.js",
-  "unpkg": "dist/css-in-js.umd.js",
-  "jsdelivr": "dist/css-in-js.umd.js",
-  "types": "./dist/index.d.ts",
   "type": "module",
-  "license": "MIT",
+  "module": "./dist/css-in-js.es.js",
+  "unpkg": "./dist/css-in-js.iife.js",
+  "jsdelivr": "./dist/css-in-js.iife.js",
+  "types": "./dist/css-in-js.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/vitarx-lib/css-in-js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/css-in-js.d.ts"
+    },
+    "./unpkg": "./dist/css-in-js.iife.js",
+    "./jsdelivr": "./dist/css-in-js.iife.js"
+  },
   "scripts": {
-    "build": "rimraf dist && vite build && tsc",
+    "build": "tsc && rimraf dist && vite build",
     "prepublishOnly": "npm run build",
     "push": "npm publish --access=public"
   },
   "peerDependencies": {
-    "vitarx": "^1.1.1"
+    "vitarx": "^3.0.0-beta.1"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
     "typescript": "^5.7.2",
-    "vite": "^6.2.1"
+    "vite": "^6.2.1",
+    "vite-plugin-dts": "^4.5.4"
   },
   "files": [
     "dist",
