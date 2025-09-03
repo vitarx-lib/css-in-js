@@ -15,11 +15,10 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    /* Vitarx Support*/
-    "types": ["vitarx"],
+    "types": ["vitarx","node"],
     "rootDir": "src",
-    "declaration": false,
-    "noEmit": true
+    "declaration": true,
+    "noEmit": false
   },
   "include": ["src"],
   "exclude": ["node_modules"]
