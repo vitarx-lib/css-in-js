@@ -29,7 +29,7 @@
   "scripts": {
     "build": "rimraf dist && tsc && vite build",
     "prepublishOnly": "npm run build",
-    "push": "npm publish --access=public --registry https://registry.npmjs.org/"
+    "push": "tsx scripts/release.ts"
   },
   "peerDependencies": {
     "vitarx": "^3.0.0"
