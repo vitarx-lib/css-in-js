@@ -262,7 +262,7 @@ export class CssInJs {
   private readonly sheet: CSSSheetStore
   // 配置项
   private readonly options: DeepRequired<CssInJsOptions> = {
-    prefix: 'css-',
+    prefix: '',
     mediaScreenRule: {
       xs: `@media screen and (max-width: 480px)`,
       sm: `@media screen and (min-width: 768px)`,
@@ -285,7 +285,9 @@ export class CssInJs {
     if (!Boolean(typeof window !== 'undefined' && window.document)) {
       throw new Error('CssInJs: 暂不支持在非浏览器端运行。')
     }
-    if (options) deepMergeObject(this.options, options)
+    if (options) {
+      this.options = deepMergeObject(this.options, options)
+    }
     this.sheet = {
       dynamic: CssInJs.createStyleSheet(),
       readonly: CssInJs.createStyleSheet(),
