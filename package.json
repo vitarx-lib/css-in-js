@@ -36,9 +36,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.17.2",
+    "conventional-changelog": "^7.1.1",
     "prettier": "^3.3.3",
     "typescript": "^5.7.2",
-    "vite": "^6.2.1"
+    "vite": "^7.1.4"
   },
   "files": [
     "dist",
