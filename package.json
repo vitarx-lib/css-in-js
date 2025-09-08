@@ -35,8 +35,13 @@
     "vitarx": "^3.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/types": "^19.8.1",
     "@types/node": "^22.17.2",
     "conventional-changelog": "^7.1.1",
+    "conventional-changelog-angular": "^8.0.0",
+    "husky": "^9.1.7",
     "prettier": "^3.3.3",
     "typescript": "^5.7.2",
     "vite": "^7.1.4"
