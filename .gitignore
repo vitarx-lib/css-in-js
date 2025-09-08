@@ -12,6 +12,7 @@ dist
 *.local
 package-lock.json
 src/route.type.d.ts
+pnpm-lock.yaml
 
 # Test
 test.ts
