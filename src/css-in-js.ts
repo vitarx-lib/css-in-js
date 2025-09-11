@@ -53,7 +53,7 @@ export interface CssStyleRule extends CSSStyleRule {
    * 如果定义规则时传入的style是响应式对象，则会在第一次定义该规则时开始监听变化自动更新样式。
    *
    * 如果它是在组件作用域内时，组件销毁会自动取消监听，移除该监听器，但不在组件作用域中时，该监听器会一直存在，
-   * 需手动`listener?.destroy()`
+   * 需手动`listener?.dispose()`
    */
   listener?: Subscriber
   /**
