@@ -5,6 +5,7 @@ import {
   isProxy,
   isRecordObject,
   isRefSignal,
+  isSignal,
   type ProxySignal,
   type RefSignal,
   type Subscriber,
@@ -575,7 +576,7 @@ export class CssInJs {
     // 缓存规则
     if (cache) this.cacheCssRule(sheet, selectorText, cssRule)
     // 监听代理对象变化
-    if (isProxy(style)) this.watchProxyStyleChange(cssRule, style)
+    if (isSignal(style)) this.watchProxyStyleChange(cssRule, style)
     // 扩展CSS规则属性
     this.extendCssRule(cssRule, name)
     return cssRule
