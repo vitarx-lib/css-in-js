@@ -1,7 +1,7 @@
 {
   "name": "@vitarx/css-in-js",
   "private": false,
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "这是一个为Vitarx框架量身打造的CssInJs库，用于在 JS 中创建 CSS",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
