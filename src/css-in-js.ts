@@ -335,7 +335,7 @@ export class CssInJs {
    * @returns {string} - 返回一个随机且唯一的`className`。
    */
   public static makeClassName(prefix: string = ''): string {
-    return prefix + CssInJs.uuidGenerator()
+    return prefix + `«${CssInJs.uuidGenerator()}»`
   }
 
   /**
