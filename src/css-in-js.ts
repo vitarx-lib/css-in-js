@@ -19,7 +19,6 @@ import {
   formatSelector,
   formatStyleKey,
   formatStyleValue,
-  isCSSStyleSheetSupported,
   removePriority
 } from './utils.js'
 
@@ -390,19 +389,18 @@ export class CssInJs {
    * @returns {CSSStyleSheet} - CSSStyleSheet。
    */
   public static createStyleSheet(): CSSStyleSheet {
-    let cssSheet: CSSStyleSheet
-    if (isCSSStyleSheetSupported()) {
-      cssSheet = new CSSStyleSheet()
+    try {
+      const cssSheet = new CSSStyleSheet()
       document.adoptedStyleSheets.push(cssSheet)
-    } else {
+      return cssSheet
+    } catch {
       const style = document.createElement('style')
       style.appendChild(
         document.createComment('此样式表由@vitarx/css-in-js注入与管理，请勿外部变更。')
       )
       document.head.append(style)
-      cssSheet = style.sheet!
+      return style.sheet!
     }
-    return cssSheet
   }
 
   /**
