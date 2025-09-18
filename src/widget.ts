@@ -85,7 +85,7 @@ function defineStyles(
   className: string,
   readonly = false
 ): void {
-  const cssInJs = CssInJs.create({ prefix: 'styled-' })
+  const cssInJs = CssInJs.create({ prefix: 'cssinjs-var-' })
   if (isRecordObject(css)) {
     cssInJs.define(css, { selector: className, readonly })
   }
