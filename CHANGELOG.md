@@ -1,9 +1,12 @@
-## <small>3.0.2 (2025-09-12)</small>
+## <small>3.0.3 (2025-09-18)</small>
 
-* build: 完善 git tag 创建过程 ([6795a37](https://github.com/vitarx-lib/css-in-js/commit/6795a37))
-* build: 更新发布脚本并移除旧代码 ([d9f35ac](https://github.com/vitarx-lib/css-in-js/commit/d9f35ac))
+* feat(css-in-js): 为 makeClassName 方法添加分隔符 ([65fed0a](https://github.com/vitarx-lib/css-in-js/commit/65fed0a))
+* refactor(css-in-js): 优化 CSSStyleSheet 创建逻辑，兼容移动端低版本浏览器。 ([dff71a1](https://github.com/vitarx-lib/css-in-js/commit/dff71a1))
 * refactor(css-in-js): 优化样式变更监听逻辑 ([1745a0e](https://github.com/vitarx-lib/css-in-js/commit/1745a0e))
 * refactor(css-in-js): 更新监听器方法名称和类型 ([486de4a](https://github.com/vitarx-lib/css-in-js/commit/486de4a))
+* build: 完善 git tag 创建过程 ([6795a37](https://github.com/vitarx-lib/css-in-js/commit/6795a37))
+* build: 更新发布脚本并移除旧代码 ([d9f35ac](https://github.com/vitarx-lib/css-in-js/commit/d9f35ac))
+* build(@vitarx/css-in-js): release v3.0.2 ([94192a4](https://github.com/vitarx-lib/css-in-js/commit/94192a4))
 
 
 
