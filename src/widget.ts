@@ -5,6 +5,7 @@ import {
   isRecordObject,
   type MakeRequired,
   type SimpleWidget,
+  watchEffect,
   Widget
 } from 'vitarx'
 import { CssInJs, type CssStyle, type Screen } from './css-in-js.js'
@@ -124,7 +125,7 @@ export class StyledWidget extends Widget<StyledProps> {
   // 排除继承属性，其他属性都会被继承给根元素
   static readonly excludeInheritProps = ['tag', 'forCss', 'css', 'cssIn']
   // 样式类名
-  public readonly className: string
+  private className: string
 
   constructor(props: StyledProps) {
     super(props)
@@ -140,7 +141,13 @@ export class StyledWidget extends Widget<StyledProps> {
     } else {
       this.className = CssInJs.create({ prefix: 'styled-' }).className()
     }
-    defineStyles(props.css, props.cssIn, this.className, readonly)
+    watchEffect(() => {
+      if (typeof props.forCss === 'string' && props.forCss.trim().length) {
+        this.className = props.forCss.trim()
+        readonly = true
+      }
+      defineStyles(props.css, props.cssIn, this.className, readonly)
+    })
   }
 
   get tag(): HTMLTags {
