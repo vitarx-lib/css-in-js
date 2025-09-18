@@ -2,7 +2,6 @@ import {
   deepMergeObject,
   type DeepRequired,
   getCurrentVNode,
-  isProxy,
   isRecordObject,
   isRefSignal,
   isSignal,
@@ -640,7 +639,7 @@ export class CssInJs {
    * @param {CssStyleMap} style - 样式对象
    */
   private updateCachedRule(cssRule: CssStyleRule, style: CssStyleMap): void {
-    if (isProxy(style)) {
+    if (isSignal(style)) {
       this.watchProxyStyleChange(cssRule, style)
     } else {
       CssInJs.replaceRuleStyle(cssRule, style)
