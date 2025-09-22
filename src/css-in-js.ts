@@ -245,7 +245,11 @@ export type CSSSheetStore = {
  * ```
  */
 export class CssInJs {
-  // 随机生成id
+  /**
+   * id生成器
+   *
+   * 调用id生成器可以输出一个最短长度为3的随机且进程唯一的字符串。
+   */
   static readonly uuidGenerator: () => string = createUUIDGenerator(3)
   /**
    * 媒体屏幕查询标签
