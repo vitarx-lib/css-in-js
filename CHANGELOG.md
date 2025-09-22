@@ -1,123 +1,72 @@
-## <small>3.0.3 (2025-09-18)</small>
-
-* feat(css-in-js): 为 makeClassName 方法添加分隔符 ([65fed0a](https://github.com/vitarx-lib/css-in-js/commit/65fed0a))
-* refactor(css-in-js): 优化 CSSStyleSheet 创建逻辑，兼容移动端低版本浏览器。 ([dff71a1](https://github.com/vitarx-lib/css-in-js/commit/dff71a1))
-* refactor(css-in-js): 优化样式变更监听逻辑 ([1745a0e](https://github.com/vitarx-lib/css-in-js/commit/1745a0e))
-* refactor(css-in-js): 更新监听器方法名称和类型 ([486de4a](https://github.com/vitarx-lib/css-in-js/commit/486de4a))
-* build: 完善 git tag 创建过程 ([6795a37](https://github.com/vitarx-lib/css-in-js/commit/6795a37))
-* build: 更新发布脚本并移除旧代码 ([d9f35ac](https://github.com/vitarx-lib/css-in-js/commit/d9f35ac))
-* build(@vitarx/css-in-js): release v3.0.2 ([94192a4](https://github.com/vitarx-lib/css-in-js/commit/94192a4))
+## [3.0.4](https://github.com/vitarx-lib/css-in-js/compare/v3.0.3...v3.0.4) (2025-09-22)
 
 
+### Bug Fixes
 
-## <small>3.0.1 (2025-09-08)</small>
+* **widget:** 在构造函数中添加watchEffect修复css属性变化样式未更新问题 ([a4fcb6c](https://github.com/vitarx-lib/css-in-js/commit/a4fcb6cac8dec12575094d195f69f126344b7d12))
 
-* build: v3.0.1 ([e5358f1](https://github.com/vitarx-lib/css-in-js/commit/e5358f1))
-* build: 更新 package.json 中的 push 脚本 ([9219ffe](https://github.com/vitarx-lib/css-in-js/commit/9219ffe))
-* build: 添加发布脚本 ([a12789a](https://github.com/vitarx-lib/css-in-js/commit/a12789a))
-* build(devDependencies): 更新 Vite版本并添加 conventional-changelog依赖 ([4dc526a](https://github.com/vitarx-lib/css-in-js/commit/4dc526a))
-* build(devDependencies): 更新项目开发依赖 ([b623a92](https://github.com/vitarx-lib/css-in-js/commit/b623a92))
-* ci: 添加 commitlint 配置和 husky 钩子 ([d1980e9](https://github.com/vitarx-lib/css-in-js/commit/d1980e9))
-* fix(css-in-js): 修复配置不生效问题 ([67a5527](https://github.com/vitarx-lib/css-in-js/commit/67a5527))
-* chore: 忽略 pnpm 锁文件 ([4153f93](https://github.com/vitarx-lib/css-in-js/commit/4153f93))
+
+### Features
+
+* **css-in-js:** 为 makeClassName 方法添加分隔符 ([65fed0a](https://github.com/vitarx-lib/css-in-js/commit/65fed0ae009b744c60425986a23c83e0f3adfe50))
 
 
 
-## 3.0.0 (2025-09-06)
+## [3.0.2](https://github.com/vitarx-lib/css-in-js/compare/v3.0.1...v3.0.2) (2025-09-12)
 
-* build: 发布3.0.0正式版 ([aff0e79](https://github.com/vitarx-lib/css-in-js/commit/aff0e79))
-* build: 更新 tsconfig.json 配置 ([2c8c3d1](https://github.com/vitarx-lib/css-in-js/commit/2c8c3d1))
-* build: 更新项目版本号 ([6b35b92](https://github.com/vitarx-lib/css-in-js/commit/6b35b92))
-* build: 更新项目版本号 ([40809f8](https://github.com/vitarx-lib/css-in-js/commit/40809f8))
-* build: 更新项目版本号 ([b54e32b](https://github.com/vitarx-lib/css-in-js/commit/b54e32b))
-* build: 更新项目版本号1.0.0-beta.11 ([b05255a](https://github.com/vitarx-lib/css-in-js/commit/b05255a))
-* build: 更新项目版本号1.0.0-beta.14 ([9f0b804](https://github.com/vitarx-lib/css-in-js/commit/9f0b804))
-* build: 更新项目版本号1.0.0-beta.7 ([66d5a53](https://github.com/vitarx-lib/css-in-js/commit/66d5a53))
-* build: 更新项目版本号1.0.0-beta.8 ([4875386](https://github.com/vitarx-lib/css-in-js/commit/4875386))
-* build: 更新项目版本号1.1.0 ([35fba69](https://github.com/vitarx-lib/css-in-js/commit/35fba69))
-* build: 添加 noEmit 编译选项 ([c4b5ec4](https://github.com/vitarx-lib/css-in-js/commit/c4b5ec4))
-* build(css-in-js): 更新版本号和依赖 ([cb17ab9](https://github.com/vitarx-lib/css-in-js/commit/cb17ab9))
-* build(css-in-js): 更新版本号和依赖 ([4fa5e39](https://github.com/vitarx-lib/css-in-js/commit/4fa5e39))
-* build(css-in-js): 更新版本号和类型定义文件 ([2296cd2](https://github.com/vitarx-lib/css-in-js/commit/2296cd2))
-* build(css-in-js): 更新版本号并调整打包配置 ([b59dbf7](https://github.com/vitarx-lib/css-in-js/commit/b59dbf7))
-* build(css-in-js): 更新版本号至 1.0.0-beta.4 并升级 vitarx 依赖 ([dc62d18](https://github.com/vitarx-lib/css-in-js/commit/dc62d18))
-* build(css-in-js): 更新版本号至 1.0.0-beta.5 并升级 vitarx 依赖 ([b024ebf](https://github.com/vitarx-lib/css-in-js/commit/b024ebf))
-* build(css-in-js): 更新版本号至 1.0.0并添加相关信息 ([c134b50](https://github.com/vitarx-lib/css-in-js/commit/c134b50))
-* build(css-in-js): 更新版本至 1.0.0-beta.13 ([9efaaf0](https://github.com/vitarx-lib/css-in-js/commit/9efaaf0))
-* build(css-in-js): 更新至3.0.0-beta.1 版本并优化构建配置 ([a02d486](https://github.com/vitarx-lib/css-in-js/commit/a02d486))
-* build(dependencies): 更新 vitarx 依赖版本 ([10df6e0](https://github.com/vitarx-lib/css-in-js/commit/10df6e0))
-* build(package): 优化打包配置并更新类型定义 ([104f5e9](https://github.com/vitarx-lib/css-in-js/commit/104f5e9))
-* build(vite): 更新打包配置并移除类型定义插件 ([d288365](https://github.com/vitarx-lib/css-in-js/commit/d288365))
-* build(vite): 添加类型定义插件并调整打包格式 ([a7bacb1](https://github.com/vitarx-lib/css-in-js/commit/a7bacb1))
-* (utils):feat 添加格式化 CSS选择器的工具函数 ([1b5eb7d](https://github.com/vitarx-lib/css-in-js/commit/1b5eb7d))
-* build:调整 TypeScript编译配置 ([b64e2f5](https://github.com/vitarx-lib/css-in-js/commit/b64e2f5))
-* feat:导出 helper.js模块 ([9c048b1](https://github.com/vitarx-lib/css-in-js/commit/9c048b1))
-* refactor(css-in-js): 为 CSS-in-JS 类名添加前缀 ([bfd5131](https://github.com/vitarx-lib/css-in-js/commit/bfd5131))
-* refactor(css-in-js): 优化 CSS 规则的合并逻辑 ([6956058](https://github.com/vitarx-lib/css-in-js/commit/6956058))
-* refactor(css-in-js): 优化 CssInJs 类的初始化逻辑 ([d124435](https://github.com/vitarx-lib/css-in-js/commit/d124435))
-* refactor(css-in-js): 优化动态样式监听和清理机制 ([539ca1d](https://github.com/vitarx-lib/css-in-js/commit/539ca1d))
-* refactor(css-in-js): 优化导入语句结构 ([21ee675](https://github.com/vitarx-lib/css-in-js/commit/21ee675))
-* refactor(css-in-js): 优化样式规则的插入和更新逻辑 ([1618acc](https://github.com/vitarx-lib/css-in-js/commit/1618acc))
-* refactor(css-in-js): 修改类导出方式以简化结构 ([582ec74](https://github.com/vitarx-lib/css-in-js/commit/582ec74))
-* refactor(css-in-js): 将 createStyleSheet 方法改为公有方法 ([4e02276](https://github.com/vitarx-lib/css-in-js/commit/4e02276))
-* refactor(css-in-js): 更新 CSS-in-JS 相关 API ([0dcd323](https://github.com/vitarx-lib/css-in-js/commit/0dcd323))
-* refactor(css-in-js): 适配 vitarx 3.x版本 ([47e88db](https://github.com/vitarx-lib/css-in-js/commit/47e88db))
-* refactor(css-in-js): 适配最新的 Vitarx 版本并优化样式处理 ([bfeb913](https://github.com/vitarx-lib/css-in-js/commit/bfeb913))
-* refactor(css-in-js): 重构 CSS-in-JS 相关函数 ([88bbe66](https://github.com/vitarx-lib/css-in-js/commit/88bbe66))
-* refactor(css-in-js): 重构 CssInJs 类 ([942393d](https://github.com/vitarx-lib/css-in-js/commit/942393d))
-* refactor(css-in-js): 重构单例模式实现 ([4d7ac57](https://github.com/vitarx-lib/css-in-js/commit/4d7ac57))
-* refactor(css-in-js): 重构类名生成逻辑并优化样式更新机制 ([605642f](https://github.com/vitarx-lib/css-in-js/commit/605642f))
-* refactor(helper): 重构 CSS样式定义助手函数 ([e2b6567](https://github.com/vitarx-lib/css-in-js/commit/e2b6567))
-* refactor(helper): 重构助手函数并优化导入语句 ([3a42455](https://github.com/vitarx-lib/css-in-js/commit/3a42455))
-* refactor(README): 更新 define函数使用示例 ([f06cef0](https://github.com/vitarx-lib/css-in-js/commit/f06cef0))
-* refactor(src): 移除未使用的 utils 导出 ([5f7b2c9](https://github.com/vitarx-lib/css-in-js/commit/5f7b2c9))
-* refactor(src): 调整 UUID 生成器的初始长度逻辑 ([cd43e9c](https://github.com/vitarx-lib/css-in-js/commit/cd43e9c))
-* refactor(src): 重命名样式定义函数 ([1358441](https://github.com/vitarx-lib/css-in-js/commit/1358441))
-* refactor(src): 重构样式组件定义逻辑 ([04f7bf5](https://github.com/vitarx-lib/css-in-js/commit/04f7bf5))
-* refactor(widget): 优化样式处理和类定义 ([5264a88](https://github.com/vitarx-lib/css-in-js/commit/5264a88))
-* refactor(widget): 优化样式处理逻辑 ([14f7420](https://github.com/vitarx-lib/css-in-js/commit/14f7420))
-* refactor(widget): 泛型化 MediaScreenCss 类型定义 ([0f4fdee](https://github.com/vitarx-lib/css-in-js/commit/0f4fdee))
-* refactor(widget): 适配Vitarx3版本 ([d8a2390](https://github.com/vitarx-lib/css-in-js/commit/d8a2390))
-* refactor(widget): 重构 CssInJs 的使用方式 ([a53a87e](https://github.com/vitarx-lib/css-in-js/commit/a53a87e))
-* docs: 更新 LICENSE 文件 ([44d6a55](https://github.com/vitarx-lib/css-in-js/commit/44d6a55))
-* docs(README): 更新 css-in-js 库的使用说明 ([0af70af](https://github.com/vitarx-lib/css-in-js/commit/0af70af))
-* docs(README): 更新 CssInJs 库文档 ([692c309](https://github.com/vitarx-lib/css-in-js/commit/692c309))
-* docs(README): 更新基本用法示例 ([580c45c](https://github.com/vitarx-lib/css-in-js/commit/580c45c))
-* docs(README): 更新文档以明确样式定义和组件卸载时的清理工作 ([5c76468](https://github.com/vitarx-lib/css-in-js/commit/5c76468))
-* docs(README): 更新文档结构和内容 ([daebde3](https://github.com/vitarx-lib/css-in-js/commit/daebde3))
-* docs(README): 更新样式同步更改示例代码 ([728731b](https://github.com/vitarx-lib/css-in-js/commit/728731b))
-* docs(README): 更新配置相关文档 ([e994215](https://github.com/vitarx-lib/css-in-js/commit/e994215))
-* docs(widget): 补充 forCss 属性的使用说明 ([c3163d7](https://github.com/vitarx-lib/css-in-js/commit/c3163d7))
-* fix(css-in-js): 修复已插入样式表的保留问题 ([d31e163](https://github.com/vitarx-lib/css-in-js/commit/d31e163))
-* fix(css-in-js): 修复替换样式无效BUG ([d938e33](https://github.com/vitarx-lib/css-in-js/commit/d938e33))
-* fix(widget): 修复样式绑定BUG ([98ce75a](https://github.com/vitarx-lib/css-in-js/commit/98ce75a))
-* feat: 添加 utils.js 的导出 ([c5b3647](https://github.com/vitarx-lib/css-in-js/commit/c5b3647))
-* feat(core): 添加 sheetStore 属性 ([25ef731](https://github.com/vitarx-lib/css-in-js/commit/25ef731))
-* feat(css-in-js): 优化媒体查询并添加样式配置选项 ([6daa1c4](https://github.com/vitarx-lib/css-in-js/commit/6daa1c4))
-* feat(css-in-js): 优化样式管理和性能 ([cb094cf](https://github.com/vitarx-lib/css-in-js/commit/cb094cf))
-* feat(css-in-js): 优化静态 CSS 规则管理 ([76bf2c2](https://github.com/vitarx-lib/css-in-js/commit/76bf2c2))
-* feat(css-in-js): 增强样式对象支持并优化 API ([645845e](https://github.com/vitarx-lib/css-in-js/commit/645845e))
-* feat(css-in-js): 新增 CssInJs 库实现 css-in-js 功能 ([be9a6ae](https://github.com/vitarx-lib/css-in-js/commit/be9a6ae))
-* feat(css-in-js): 更新媒体查询规则以匹配常见设备尺寸 ([2875c2e](https://github.com/vitarx-lib/css-in-js/commit/2875c2e))
-* feat(css-in-js): 更新屏幕尺寸断点预设规则注释 ([093839f](https://github.com/vitarx-lib/css-in-js/commit/093839f))
-* feat(css-in-js): 添加自定义前缀功能 ([97ec2fe](https://github.com/vitarx-lib/css-in-js/commit/97ec2fe))
-* feat(css-in-js): 添加自定义选择器规则定义功能 ([e79f87d](https://github.com/vitarx-lib/css-in-js/commit/e79f87d))
-* feat(css-in-js): 重构 CSS 规则定义和管理 ([8a6a035](https://github.com/vitarx-lib/css-in-js/commit/8a6a035))
-* feat(css-in-js): 重构并新增功能 ([9efe3ca](https://github.com/vitarx-lib/css-in-js/commit/9efe3ca))
-* feat(export): 导出 CssInJs 默认模块 ([17cfc69](https://github.com/vitarx-lib/css-in-js/commit/17cfc69))
-* feat(helper): 新增 CSS-in-JS 辅助函数 ([87f10d9](https://github.com/vitarx-lib/css-in-js/commit/87f10d9))
-* feat(helper): 添加自定义选择器规则助手函数 ([b312b15](https://github.com/vitarx-lib/css-in-js/commit/b312b15))
-* feat(README): 添加 `only` 选项的说明 ([9fe415b](https://github.com/vitarx-lib/css-in-js/commit/9fe415b))
-* feat(utils): 优化样式处理功能 ([aebe215](https://github.com/vitarx-lib/css-in-js/commit/aebe215))
-* feat(utils): 添加 isValidName 函数并更新导出 ([7ecf02c](https://github.com/vitarx-lib/css-in-js/commit/7ecf02c))
-* feat(utils): 添加样式对象转 CSS 字符串的工具函数 ([4dda39d](https://github.com/vitarx-lib/css-in-js/commit/4dda39d))
-* feat(widget): 优化 Styled 组件并添加文档注释 ([b2a0efa](https://github.com/vitarx-lib/css-in-js/commit/b2a0efa))
-* feat(widget): 添加 styled 组件前缀 ([403af73](https://github.com/vitarx-lib/css-in-js/commit/403af73))
-* feat(widget): 添加样式组件和小部件 ([4733237](https://github.com/vitarx-lib/css-in-js/commit/4733237))
-* perf(css-in-js): 优化样式规则的插入逻辑 ([7d1d7f8](https://github.com/vitarx-lib/css-in-js/commit/7d1d7f8))
-* perf(utils): 优化 cssMapToRuleStyle 函数性能并添加样式过滤 ([6520905](https://github.com/vitarx-lib/css-in-js/commit/6520905))
-* perf(utils): 优化 CSSStyleSheet支持性检测 ([4de1285](https://github.com/vitarx-lib/css-in-js/commit/4de1285))
-* optimize(css-in-js): 优化静态样式删除与唯一样式缓存 ([bcbd6b3](https://github.com/vitarx-lib/css-in-js/commit/bcbd6b3))
+
+
+## [3.0.1](https://github.com/vitarx-lib/css-in-js/compare/v3.0.0...v3.0.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* **css-in-js:** 修复配置不生效问题 ([67a5527](https://github.com/vitarx-lib/css-in-js/commit/67a552777a0a1575341412b52a56e5f3ea0d801b))
+
+
+
+# [3.0.0](https://github.com/vitarx-lib/css-in-js/compare/v1.1.0...v3.0.0) (2025-09-06)
+
+
+### Bug Fixes
+
+* **css-in-js:** 修复已插入样式表的保留问题 ([d31e163](https://github.com/vitarx-lib/css-in-js/commit/d31e16365a0f693a089cf8f528c18abdf94510f0))
+* **css-in-js:** 修复替换样式无效BUG ([d938e33](https://github.com/vitarx-lib/css-in-js/commit/d938e33806f7f8b892f5d83cf98fdb55dcbbbccb))
+* **widget:** 修复样式绑定BUG ([98ce75a](https://github.com/vitarx-lib/css-in-js/commit/98ce75af3fd1b994239affda703fd6ba237dcffe))
+
+
+### Features
+
+* **core:** 添加 sheetStore 属性 ([25ef731](https://github.com/vitarx-lib/css-in-js/commit/25ef7311644ef4b8117643e894ef95c50eb459ff))
+* **css-in-js:** 优化媒体查询并添加样式配置选项 ([6daa1c4](https://github.com/vitarx-lib/css-in-js/commit/6daa1c4d6e3db6128cedac08bdd56e965f1b6cb5))
+* **css-in-js:** 优化样式管理和性能 ([cb094cf](https://github.com/vitarx-lib/css-in-js/commit/cb094cfb41bc206cdf20558d4d9797128a21c58e))
+* **css-in-js:** 优化静态 CSS 规则管理 ([76bf2c2](https://github.com/vitarx-lib/css-in-js/commit/76bf2c29349bd5704fdc439c3746305f5b167d72))
+* **css-in-js:** 增强样式对象支持并优化 API ([645845e](https://github.com/vitarx-lib/css-in-js/commit/645845e428c7c71b7f41047f9e33b498471245a9))
+* **css-in-js:** 新增 CssInJs 库实现 css-in-js 功能 ([be9a6ae](https://github.com/vitarx-lib/css-in-js/commit/be9a6aee25cfa0ad70bc0af21ef6168c686f324b))
+* **css-in-js:** 更新媒体查询规则以匹配常见设备尺寸 ([2875c2e](https://github.com/vitarx-lib/css-in-js/commit/2875c2e98bef8cab0990efd1ec94965997cf72eb))
+* **css-in-js:** 更新屏幕尺寸断点预设规则注释 ([093839f](https://github.com/vitarx-lib/css-in-js/commit/093839fa0d2a0c9b0e78f8fb2c9c74d4cef2deee))
+* **css-in-js:** 添加自定义前缀功能 ([97ec2fe](https://github.com/vitarx-lib/css-in-js/commit/97ec2fe3def69e44c967b53fd94d90ee293b6be2))
+* **css-in-js:** 添加自定义选择器规则定义功能 ([e79f87d](https://github.com/vitarx-lib/css-in-js/commit/e79f87d6c560dd59e3596a690b7464373d23c27e))
+* **css-in-js:** 重构 CSS 规则定义和管理 ([8a6a035](https://github.com/vitarx-lib/css-in-js/commit/8a6a0351f2bf726188eb5886b4dc6d563ff256af))
+* **css-in-js:** 重构并新增功能 ([9efe3ca](https://github.com/vitarx-lib/css-in-js/commit/9efe3caad9cbe5ee63674e25d7114f2c55535f4e))
+* **export:** 导出 CssInJs 默认模块 ([17cfc69](https://github.com/vitarx-lib/css-in-js/commit/17cfc6961757a77e56a60262a391faa494558adb))
+* **helper:** 新增 CSS-in-JS 辅助函数 ([87f10d9](https://github.com/vitarx-lib/css-in-js/commit/87f10d9c8a9bf0a7c1055411f2122cdea8d48db0))
+* **helper:** 添加自定义选择器规则助手函数 ([b312b15](https://github.com/vitarx-lib/css-in-js/commit/b312b15383feb502557d2d689d06af6b7d774214))
+* **README:** 添加 `only` 选项的说明 ([9fe415b](https://github.com/vitarx-lib/css-in-js/commit/9fe415bd9e94e4cb67806dd25446327a3dccc44a))
+* **utils:** 优化样式处理功能 ([aebe215](https://github.com/vitarx-lib/css-in-js/commit/aebe2153250ee738bde3bec6b520a2925617532b))
+* **utils:** 添加 isValidName 函数并更新导出 ([7ecf02c](https://github.com/vitarx-lib/css-in-js/commit/7ecf02cc33d0b317f172c48afc895e94ce1d19d5))
+* **utils:** 添加样式对象转 CSS 字符串的工具函数 ([4dda39d](https://github.com/vitarx-lib/css-in-js/commit/4dda39d7870618c474507cc9ad4da526849b9ec7))
+* **widget:** 优化 Styled 组件并添加文档注释 ([b2a0efa](https://github.com/vitarx-lib/css-in-js/commit/b2a0efa539d9d99267078bc419200d81d0dc37fe))
+* **widget:** 添加 styled 组件前缀 ([403af73](https://github.com/vitarx-lib/css-in-js/commit/403af73a9dcc6ddf1a92e7117adbc648da0eeafc))
+* **widget:** 添加样式组件和小部件 ([4733237](https://github.com/vitarx-lib/css-in-js/commit/47332370ae2a6d4317a2c721d78b6c9fe4e50dad))
+* 添加 utils.js 的导出 ([c5b3647](https://github.com/vitarx-lib/css-in-js/commit/c5b3647c4f64f2f689ad0366f534811946a6f59b))
+
+
+### Performance Improvements
+
+* **css-in-js:** 优化样式规则的插入逻辑 ([7d1d7f8](https://github.com/vitarx-lib/css-in-js/commit/7d1d7f8859f222a131e1779f80b11691e3f787b2))
+* **utils:** 优化 cssMapToRuleStyle 函数性能并添加样式过滤 ([6520905](https://github.com/vitarx-lib/css-in-js/commit/6520905b9b202d62b9680f92e9ab447283d59aa8))
+* **utils:** 优化 CSSStyleSheet支持性检测 ([4de1285](https://github.com/vitarx-lib/css-in-js/commit/4de128526a4847b20a2ac8253fa1959626f73837))
 
 
 
