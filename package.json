@@ -32,7 +32,7 @@
     "push": "release-cli"
   },
   "peerDependencies": {
-    "vitarx": "^3.0.0"
+    "vitarx": "^3.1.3"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
