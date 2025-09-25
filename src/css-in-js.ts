@@ -136,7 +136,7 @@ export interface CssRuleOptions {
   /**
    * 自定义选择器
    *
-   * 选择器开头部分不支持元素选择器，但你可以在选择器片段中组合其他选择器。
+   * 不支持元素选择器、:root、@xx，但你可以在选择器片段中组合其他选择器。
    *
    * 原理上支持任意css选择器（id选择器，类选择器，伪类选择器，伪元素选择器，组合选择器，子选择器，子元素选择器，子元素选择器...），
    * 如果使用自定义选择器时，勿直接将返回的`className`作为元素`className`|`class`使用，
@@ -144,8 +144,9 @@ export interface CssRuleOptions {
    *
    * 示例：`.my-class:hover`，`.my-class[attr="value"]`...
    *
-   * > 注意：不要@，例如@import，@font-face，@keyframes，@media...，
+   * > 注意：不要以@或:开头，例如@import，@font-face，@keyframes，@media...，
    * 常用的自适应屏幕断点，已内置了媒介查询样式表，可以使用`screen`配置需要适配的屏幕。
+   * 如果必须要定义使用，可以通过 `instance.sheetStore.readonly.insertRule(cssString)` 直接插入样式表。
    */
   selector?: string
   /**
