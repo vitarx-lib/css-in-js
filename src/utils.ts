@@ -108,6 +108,8 @@ export function removePriority(value: string): string {
  * @returns {string}
  */
 export function formatStyleKey(key: string): string {
+  key = key.trim()
+  if (key.startsWith('-')) return key
   return key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
 }
 /**
