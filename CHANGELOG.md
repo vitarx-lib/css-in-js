@@ -1,9 +1,15 @@
-## [3.0.4](https://github.com/vitarx-lib/css-in-js/compare/v3.0.3...v3.0.4) (2025-09-22)
+## [3.0.5](https://github.com/vitarx-lib/css-in-js/compare/v3.0.4...v3.0.5) (2025-09-25)
 
 
 ### Bug Fixes
 
+* **css-in-js:** 修复样式属性类型转换问题 ([cdc6ad5](https://github.com/vitarx-lib/css-in-js/commit/cdc6ad57312dcc3d0e54cedbed09b9b457ed5b01))
+* **utils:** 修复样式键格式化函数 ([327d851](https://github.com/vitarx-lib/css-in-js/commit/327d8517b7977482488eae0c657434520af1ad42))
 * **widget:** 在构造函数中添加watchEffect修复css属性变化样式未更新问题 ([a4fcb6c](https://github.com/vitarx-lib/css-in-js/commit/a4fcb6cac8dec12575094d195f69f126344b7d12))
+
+
+
+## [3.0.3](https://github.com/vitarx-lib/css-in-js/compare/v3.0.2...v3.0.3) (2025-09-18)
 
 
 ### Features
