@@ -117,7 +117,6 @@ export function formatStyleKey(key: string): string {
  *
  * @param {CssStyle} cssStyleMap - 样式对象
  * @param {string} selectorText - 选择器文本
- * @private
  */
 export function cssStyleMapToCssRuleText(cssStyleMap: CssStyleMap, selectorText: string): string {
   if (isRefSignal(cssStyleMap)) cssStyleMap = cssStyleMap.value
